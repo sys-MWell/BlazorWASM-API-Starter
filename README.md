@@ -1,0 +1,1 @@
+# Blazor API and Web App Template
