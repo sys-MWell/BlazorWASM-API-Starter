@@ -1,0 +1,97 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Blazor.Web.Domain.Auth
+@using Blazor.Web.Components.Shared
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 d-flex justify-content-end align-items-center gap-3">
+            <AuthorizeView>
+                <Authorized Context="authState">
+                    <span>Hello, @DisplayName</span>
+                    <span><button type="button" class="btn btn-sm" @onclick="ToggleAccountModal"><img width="40" src="icons/user-account-icon.png" /></button></span>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="OnLogout">Logout</button>
+                </Authorized>
+                <NotAuthorized>
+                    <NavLink class="btn btn-sm btn-outline-primary" href="/Account">Account</NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@if (_showAccount && _userSession?.CurrentUser is not null)
+{
+    <UserAccountModal IsOpen="true"
+                      UserAccountDetails=_userSession?.CurrentUser
+                      OnClose="CloseAccountModal">
+    </UserAccountModal>
+}
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a href="#" class="dismiss">??</a>
+</div>
+
+@code {
+    [Inject] private AuthenticationStateProvider AuthProvider { get; set; } = null!;
+    [Inject] private ITokenStore TokenStore { get; set; } = null!;
+    [Inject] private NavigationManager Nav { get; set; } = null!;
+    [Inject] private IUserSession _userSession { get; set; } = null!;
+
+    private bool _restored;
+    private bool _showAccount;
+    private string DisplayName => _userSession?.CurrentUser?.Username ?? string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_restored && AuthProvider is CustomAuthenticationStateProvider custom)
+        {
+            _restored = true;
+            await custom.RestoreFromPersistenceAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleAccountModal()
+    {
+        if (_showAccount)
+        {
+            CloseAccountModal();
+        }
+        else
+        {
+            // ensure auth state loaded if not yet
+            if (!_restored && AuthProvider is CustomAuthenticationStateProvider custom)
+            {
+                await custom.RestoreFromPersistenceAsync();
+                _restored = true;
+            }
+            _showAccount = true;
+        }
+    }
+
+    private void CloseAccountModal() => _showAccount = false;
+
+    private async Task OnLogout()
+    {
+        _showAccount = false;
+        TokenStore.ClearToken();
+        _userSession.Clear();
+        if (AuthProvider is CustomAuthenticationStateProvider custom)
+        {
+            await custom.MarkUserAsLoggedOutAsync();
+        }
+        Nav.NavigateTo("/Account");
+    }
+}

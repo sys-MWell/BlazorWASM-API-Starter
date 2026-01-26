@@ -1,0 +1,36 @@
+@using global::App.Models.Dtos
+
+<div class="modal" style="display:@(IsOpen ? "block" : "none")">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Account</h5>
+                <button type="button" class="btn-close" aria-label="Close" @onclick="OnClose"></button>
+            </div>
+            <div class="modal-body">
+                @if (UserAccountDetails is not null)
+                {
+                    <p><strong>Id:</strong> @UserAccountDetails.Id</p>
+                    <p><strong>Username:</strong> @UserAccountDetails.Username</p>
+                    @if (!string.IsNullOrWhiteSpace(UserAccountDetails.Role))
+                    {
+                        <p><strong>Role:</strong> @UserAccountDetails.Role</p>
+                    }
+                }
+                else
+                {
+                    <p>No account details available.</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="OnClose">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public UserDetailDto? UserAccountDetails { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+}

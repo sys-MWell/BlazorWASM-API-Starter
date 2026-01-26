@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Shared/">
+    <Project Path="../Shared/App.Models/App.Models.csproj" />
+  </Folder>
+  <Project Path="Blazor.Web.Client/Blazor.Web.Client.csproj" />
+  <Project Path="Blazor.Web.Domain/Blazor.Web.Domain.csproj" />
+  <Project Path="Blazor.Web.Logic/Blazor.Web.Logic.csproj" />
+  <Project Path="Blazor.Web.Models/Blazor.Web.Models.csproj" />
+  <Project Path="Blazor.Web.Repository/Blazor.Web.Repository.csproj" />
+  <Project Path="Blazor.Web.Test/Blazor.Web.Test.csproj" />
+  <Project Path="Blazor.Web/Blazor.Web.csproj" />
+</Solution>

@@ -1,0 +1,231 @@
+﻿@page "/Account"
+@rendermode InteractiveServer
+
+@using Blazor.Web.Logic.Services.Validation
+@using Blazor.Web.Logic.User
+@using Blazor.Web.Domain.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+
+<!-- Account page -->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mx-auto">
+                <div class="text-center mt-5" style="font-size:20px;">
+                    App Account - @(_isRegisterMode ? "Register" : "Login")
+                </div>
+
+                @if (!_isRegisterMode)
+                {
+                    <!-- LOGIN FORM -->
+                    <EditForm Model="_loginUser" OnValidSubmit="HandleLoginSubmit" FormName="LoginForm">
+                        <div class="mb-3">
+                            <label for="login-username" class="form-label">Username</label>
+                            <InputText id="login-username"
+                                       @bind-Value="_loginUser.Username"
+                                       class="form-control form-control-lg"
+                                       autocomplete="off" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">Password</label>
+                            <InputText id="login-password"
+                                       @bind-Value="_loginUser.UserPassword"
+                                       type="password"
+                                       class="form-control form-control-lg"
+                                       autocomplete="off" />
+                        </div>
+                        <div class="d-grid gap-2 mt-3">
+                            <button type="submit" class="btn btn-info btn-lg">Log in</button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg" @onclick="SwitchToRegister">
+                                Need an account? Register
+                            </button>
+                        </div>
+                        @if (_validationErrors.Count > 0)
+                        {
+                            <ul class="mt-3 text-danger">
+                                @foreach (var e in _validationErrors)
+                                {
+                                    <li>@e</li>
+                                }
+                            </ul>
+                        }
+                    </EditForm>
+                }
+                else
+                {
+                    <EditForm Model="_registerUser" OnValidSubmit="HandleRegisterSubmit" FormName="RegisterForm">
+                        <div class="mb-3">
+                            <label for="reg-username" class="form-label">Username</label>
+                            <InputText id="reg-username"
+                                       @bind-Value="_registerUser.Username"
+                                       class="form-control form-control-lg"
+                                       autocomplete="off" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg-password" class="form-label">Password</label>
+                            <InputText id="reg-password"
+                                       @bind-Value="_registerUser.UserPassword"
+                                       type="password"
+                                       class="form-control form-control-lg"
+                                       autocomplete="off" />
+                        </div>
+                        <div class="d-grid gap-2 mt-3">
+                            <button type="submit"
+                                    class="btn btn-success btn-lg"
+                                    disabled="@_isRegistering">
+                                    Register
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-lg" @onclick="SwitchToLogin">
+                                Back to login
+                            </button>
+                        </div>
+                        @if (_validationErrors.Count > 0)
+                        {
+                            <ul class="mt-3 text-danger">
+                                @foreach (var e in _validationErrors)
+                                {
+                                    <li>@e</li>
+                                }
+                            </ul>
+                        }
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+
+
+@code {
+    private global::App.Models.Dtos.LoginUserDto _loginUser = new();
+    private global::App.Models.Dtos.RegisterUserDto _registerUser = new();
+    private List<string> _validationErrors = new();
+
+    private string _registerModalTitle = "Account";
+    private string _registerModalBody = "";
+    private bool _isRegistering;
+    private bool _isRegisterMode;
+
+    [Inject] private IUserLogic UserLogic { get; set; } = null!;
+    [Inject] private ICredentialValidator Validator { get; set; } = null!;
+    [Inject] private NavigationManager Nav { get; set; } = null!;
+    [Inject] private AuthenticationStateProvider AuthProvider { get; set; } = null!;
+    [Inject] private ITokenStore TokenStore { get; set; } = null!;
+
+    private async Task HandleLoginSubmit()
+    {
+        try
+        {
+            _loginUser.Username = _loginUser.Username?.Trim() ?? string.Empty;
+            _validationErrors.Clear();
+
+            var result = Validator.ValidateCredentials(_loginUser.Username, _loginUser.UserPassword, forLogin: true);
+            if (!result.IsValid)
+            {
+                _validationErrors = result.Errors.Select(e => e.Message).ToList();
+                return;
+            }
+
+            var response = await UserLogic.UserLoginAsync(_loginUser);
+            if (response.IsSuccess)
+            {
+                await CompleteAuthenticationAsync();
+            }
+            else if (response.ErrorCode == global::App.Models.Models.AppErrorCode.UserNotFound)
+            {
+                _registerModalTitle = "Account Not Found";
+                _registerModalBody = $"We could not find user '{_loginUser.Username}'.";
+                await SwitchToRegister();
+            }
+            else if (response.ErrorCode == global::App.Models.Models.AppErrorCode.NotFound)
+            {
+                // HTTP 404 - API endpoint not found (infrastructure issue)
+                _validationErrors.Add("Unable to connect to authentication service. Please contact support.");
+            }
+            else
+            {
+                _validationErrors.Add(response.ErrorMessage ?? "Login failed.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _validationErrors.Add(ex.Message);
+        }
+    }
+
+    private async Task HandleRegisterSubmit()
+    {
+        if (_isRegistering) return;
+        _isRegistering = true;
+        try
+        {
+            _registerUser.Username = _registerUser.Username?.Trim() ?? string.Empty;
+            _validationErrors.Clear();
+
+            var result = Validator.ValidateCredentials(_registerUser.Username, _registerUser.UserPassword, forLogin: false);
+            if (!result.IsValid)
+            {
+                _validationErrors = result.Errors.Select(e => e.Message).ToList();
+                return; // stays in register mode with editable fields
+            }
+
+            var response = await UserLogic.UserRegisterAsync(_registerUser);
+            if (response.IsSuccess)
+            {
+                // Auto-login
+                _loginUser.Username = _registerUser.Username;
+                _loginUser.UserPassword = _registerUser.UserPassword;
+
+                var loginResponse = await UserLogic.UserLoginAsync(_loginUser);
+                if (loginResponse.IsSuccess)
+                {
+                    await CompleteAuthenticationAsync();
+                }
+                else
+                {
+                    // Registration succeeded but login failed: remain in register mode to let user adjust or go back
+                    _validationErrors.Add(loginResponse.ErrorMessage ?? "Registered but login failed.");
+                }
+            }
+            else
+            {
+                // Remain in register mode so user can correct input
+                _validationErrors.Add(response.ErrorMessage ?? "Registration failed.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _validationErrors.Add(ex.Message);
+        }
+        finally
+        {
+            _isRegistering = false;
+        }
+    }
+
+    private async Task CompleteAuthenticationAsync()
+    {
+        var token = TokenStore.AccessToken;
+        if (!string.IsNullOrWhiteSpace(token) && AuthProvider is CustomAuthenticationStateProvider custom)
+        {
+            await custom.MarkUserAsAuthenticatedAsync(token);
+        }
+        Nav.NavigateTo("/");
+    }
+
+    private Task SwitchToRegister()
+    {
+        _isRegisterMode = true;
+        // Prefill registration from attempted login
+        _registerUser.Username = _loginUser.Username;
+        _registerUser.UserPassword = _loginUser.UserPassword;
+        _validationErrors.Clear();
+        return Task.CompletedTask;
+    }
+
+    private Task SwitchToLogin()
+    {
+        _isRegisterMode = false;
+        _validationErrors.Clear();
+        return Task.CompletedTask;
+    }
+
+}
