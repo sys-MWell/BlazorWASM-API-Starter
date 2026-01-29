@@ -65,7 +65,7 @@ namespace Blazor.Web.Domain.Auth
             var persisted = await _persistence.GetTokenAsync();
             if (!string.IsNullOrWhiteSpace(persisted))
             {
-                _tokenStore.SetToken(persisted);
+                await _persistence.SaveTokenAsync(persisted);
                 _cachedPrincipal = BuildPrincipal(persisted);
                 NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
             }
@@ -79,7 +79,7 @@ namespace Blazor.Web.Domain.Auth
         /// <returns>A task representing the asynchronous authenticate operation.</returns>
         public async Task MarkUserAsAuthenticatedAsync(string token)
         {
-            _tokenStore.SetToken(token);
+
             await _persistence.SaveTokenAsync(token);
             _cachedPrincipal = BuildPrincipal(token);
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
@@ -92,7 +92,6 @@ namespace Blazor.Web.Domain.Auth
         /// <returns>A task representing the asynchronous logout operation.</returns>
         public async Task MarkUserAsLoggedOutAsync()
         {
-            _tokenStore.ClearToken();
             await _persistence.ClearTokenAsync();
             _cachedPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
             CurrentUser = null;
