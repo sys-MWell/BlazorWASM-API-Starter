@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="4.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Blueprint.API\Blueprint.API.csproj" />
+    <ProjectReference Include="..\Blueprint.API.Domain\Blueprint.API.Domain.csproj" />
+    <ProjectReference Include="..\Blueprint.API.Logic\Blueprint.API.Logic.csproj" />
+    <ProjectReference Include="..\Blueprint.API.Models\Blueprint.API.Models.csproj" />
+    <ProjectReference Include="..\Blueprint.API.Repository\Blueprint.API.Repository.csproj" />
+    <ProjectReference Include="..\..\Shared\Template.Models\Template.Models.csproj" />
+  </ItemGroup>
+
+</Project>
