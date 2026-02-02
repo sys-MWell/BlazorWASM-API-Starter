@@ -3,10 +3,11 @@
 
 @using Blazor.Web.Logic.Services.Validation
 @using Blazor.Web.Logic.User
+@using Blazor.Web.Logic.Auth
 @using Blazor.Web.Domain.Auth
 @using Microsoft.AspNetCore.Components.Authorization
 
-<!-- Account page -->
+<AnonymousOnly RedirectUrl="/">
     <div class="container">
         <div class="row">
             <div class="col-md-4 mx-auto">
@@ -52,6 +53,7 @@
                 }
                 else
                 {
+                <!-- REGISTRATION FORM -->
                     <EditForm Model="_registerUser" OnValidSubmit="HandleRegisterSubmit" FormName="RegisterForm">
                         <div class="mb-3">
                             <label for="reg-username" class="form-label">Username</label>
@@ -69,11 +71,7 @@
                                        autocomplete="off" />
                         </div>
                         <div class="d-grid gap-2 mt-3">
-                            <button type="submit"
-                                    class="btn btn-success btn-lg"
-                                    disabled="@_isRegistering">
-                                    Register
-                            </button>
+                            <button type="submit" class="btn btn-success btn-lg">Register </button>
                             <button type="button" class="btn btn-outline-secondary btn-lg" @onclick="SwitchToLogin">
                                 Back to login
                             </button>
@@ -93,15 +91,26 @@
         </div>
     </div>
 
+    @if (_showUserConfirmationModal)
+    {
+        <UserConfirmationModal Title="@_confirmationModalTitle"
+                               BodyText="@_confirmationModalBody"
+                               ConfirmText="@_confirmationModalConfirmText"
+                               OnConfirm="@_onConfirmAction"
+                               OnClose="HideRegisterConfirmationModal" />
+    }
+</AnonymousOnly>
 
-@code {
+    @code {
     private global::App.Models.Dtos.LoginUserDto _loginUser = new();
     private global::App.Models.Dtos.RegisterUserDto _registerUser = new();
     private List<string> _validationErrors = new();
 
-    private string _registerModalTitle = "Account";
-    private string _registerModalBody = "";
-    private bool _isRegistering;
+    private bool _showUserConfirmationModal;
+    private string _confirmationModalTitle = "Account";
+    private string _confirmationModalBody = "";
+    private string _confirmationModalConfirmText = "";
+    private Func<Task> _onConfirmAction = () => Task.CompletedTask;
     private bool _isRegisterMode;
 
     [Inject] private IUserLogic UserLogic { get; set; } = null!;
@@ -109,95 +118,59 @@
     [Inject] private NavigationManager Nav { get; set; } = null!;
     [Inject] private AuthenticationStateProvider AuthProvider { get; set; } = null!;
     [Inject] private ITokenStore TokenStore { get; set; } = null!;
+    [Inject] private IAuthenticationService AuthService { get; set; } = null!;
 
     private async Task HandleLoginSubmit()
     {
-        try
+        var result = await AuthService.LoginAsync(_loginUser);
+
+        if (result.Success)
         {
-            _loginUser.Username = _loginUser.Username?.Trim() ?? string.Empty;
-            _validationErrors.Clear();
-
-            var result = Validator.ValidateCredentials(_loginUser.Username, _loginUser.UserPassword, forLogin: true);
-            if (!result.IsValid)
-            {
-                _validationErrors = result.Errors.Select(e => e.Message).ToList();
-                return;
-            }
-
-            var response = await UserLogic.UserLoginAsync(_loginUser);
-            if (response.IsSuccess)
-            {
-                await CompleteAuthenticationAsync();
-            }
-            else if (response.ErrorCode == global::App.Models.Models.AppErrorCode.UserNotFound)
-            {
-                _registerModalTitle = "Account Not Found";
-                _registerModalBody = $"We could not find user '{_loginUser.Username}'.";
-                await SwitchToRegister();
-            }
-            else if (response.ErrorCode == global::App.Models.Models.AppErrorCode.NotFound)
-            {
-                // HTTP 404 - API endpoint not found (infrastructure issue)
-                _validationErrors.Add("Unable to connect to authentication service. Please contact support.");
-            }
-            else
-            {
-                _validationErrors.Add(response.ErrorMessage ?? "Login failed.");
-            }
+            await CompleteAuthenticationAsync();
         }
-        catch (Exception ex)
+        else if (result.ErrorCode == global::App.Models.Models.AppErrorCode.UserNotFound.ToString())
         {
-            _validationErrors.Add(ex.Message);
+            _confirmationModalTitle = "Account Not Found";
+            _confirmationModalBody = $"We could not find user '{_loginUser.Username}'. Switch to register?";
+            _confirmationModalConfirmText = "Switch to Register";
+            _onConfirmAction = SwitchToRegister;
+            _showUserConfirmationModal = true;
+        }
+        else if (result.ErrorCode == global::App.Models.Models.AppErrorCode.NotFound.ToString())
+        {
+            // HTTP 404 - API endpoint not found (infrastructure issue)
+            _validationErrors.Add("Unable to connect to authentication service. Please contact support.");
+        }
+        else
+        {
+            _validationErrors = result.Errors;
         }
     }
 
     private async Task HandleRegisterSubmit()
     {
-        if (_isRegistering) return;
-        _isRegistering = true;
-        try
+        var result = await AuthService.RegisterAsync(_registerUser);
+
+        if (result.Success)
         {
-            _registerUser.Username = _registerUser.Username?.Trim() ?? string.Empty;
-            _validationErrors.Clear();
-
-            var result = Validator.ValidateCredentials(_registerUser.Username, _registerUser.UserPassword, forLogin: false);
-            if (!result.IsValid)
-            {
-                _validationErrors = result.Errors.Select(e => e.Message).ToList();
-                return; // stays in register mode with editable fields
-            }
-
-            var response = await UserLogic.UserRegisterAsync(_registerUser);
-            if (response.IsSuccess)
-            {
-                // Auto-login
-                _loginUser.Username = _registerUser.Username;
-                _loginUser.UserPassword = _registerUser.UserPassword;
-
-                var loginResponse = await UserLogic.UserLoginAsync(_loginUser);
-                if (loginResponse.IsSuccess)
-                {
-                    await CompleteAuthenticationAsync();
-                }
-                else
-                {
-                    // Registration succeeded but login failed: remain in register mode to let user adjust or go back
-                    _validationErrors.Add(loginResponse.ErrorMessage ?? "Registered but login failed.");
-                }
-            }
-            else
-            {
-                // Remain in register mode so user can correct input
-                _validationErrors.Add(response.ErrorMessage ?? "Registration failed.");
-            }
+            await CompleteAuthenticationAsync();
         }
-        catch (Exception ex)
+        else if(result.ErrorCode == global::App.Models.Models.AppErrorCode.UserAlreadyExists.ToString())
         {
-            _validationErrors.Add(ex.Message);
+            _confirmationModalTitle = "Account Exists";
+            _confirmationModalBody = $"An account with username '{_registerUser.Username}' already exists. Please choose a different username. Or switch to login?";
+            _confirmationModalConfirmText = "Switch to Login";
+            _onConfirmAction = SwitchToLogin;
+            _showUserConfirmationModal = true;
         }
-        finally
+        else if (result.ErrorCode == global::App.Models.Models.AppErrorCode.NotFound.ToString())
         {
-            _isRegistering = false;
+            // HTTP 404 - API endpoint not found (infrastructure issue)
+            _validationErrors.Add("Unable to connect to authentication service. Please contact support.");
+        }
+        else
+        {
+            _validationErrors = result.Errors;
         }
     }
 
@@ -213,8 +186,8 @@
 
     private Task SwitchToRegister()
     {
+        _showUserConfirmationModal = false;
         _isRegisterMode = true;
-        // Prefill registration from attempted login
         _registerUser.Username = _loginUser.Username;
         _registerUser.UserPassword = _loginUser.UserPassword;
         _validationErrors.Clear();
@@ -223,8 +196,17 @@
 
     private Task SwitchToLogin()
     {
+        _showUserConfirmationModal = false;
         _isRegisterMode = false;
+        _registerUser.Username = _loginUser.Username;
+        _registerUser.UserPassword = _loginUser.UserPassword;
         _validationErrors.Clear();
+        return Task.CompletedTask;
+    }
+
+    private Task HideRegisterConfirmationModal()
+    {
+        _showUserConfirmationModal = false;
         return Task.CompletedTask;
     }
 

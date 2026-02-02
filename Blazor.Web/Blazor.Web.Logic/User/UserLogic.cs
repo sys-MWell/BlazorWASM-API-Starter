@@ -1,9 +1,10 @@
-﻿using System.Text.Json;
-using App.Models.Dtos;
+﻿using App.Models.Dtos;
 using App.Models.Models;
-using Blazor.Web.Repository.User;
+using Blazor.Web.Domain.Aggregates.UserAggregate;
 using Blazor.Web.Domain.Auth;
 using Blazor.Web.Domain.Validation;
+using Blazor.Web.Repository.User;
+using System.Text.Json;
 
 namespace Blazor.Web.Logic.User
 {
@@ -104,9 +105,48 @@ namespace Blazor.Web.Logic.User
         /// <returns>
         /// Not implemented.
         /// </returns>
-        public Task<ApiResponse<UserDetailDto>> UserRegisterAsync(RegisterUserDto registerCredentials)
+        public async Task<ApiResponse<UserDetailDto>> UserRegisterAsync(RegisterUserDto registerCredentials)
         {
-            throw new NotImplementedException();
+            var authResponse = await _userRepository.UserRegisterAsync(registerCredentials);
+
+            if (!authResponse.IsSuccess)
+            {
+                string? finalMessage = authResponse.ErrorMessage;
+                AppErrorCode? finalCode = authResponse.ErrorCode;
+
+                if (!string.IsNullOrWhiteSpace(finalMessage) && finalMessage.TrimStart().StartsWith("{"))
+                {
+                    using var doc = JsonDocument.Parse(finalMessage);
+                    var root = doc.RootElement;
+
+                    if (root.TryGetProperty("error", out var errorProp))
+                    {
+                        finalMessage = errorProp.GetString() ?? finalMessage;
+                    }
+
+                    if (root.TryGetProperty("code", out var codeProp) && codeProp.ValueKind == JsonValueKind.Number && codeProp.TryGetInt32(out var codeInt))
+                    {
+                        if (Enum.IsDefined(typeof(AppErrorCode), codeInt))
+                        {
+                            finalCode = (AppErrorCode)codeInt;
+                        }
+                    }
+                }
+
+                return new ApiResponse<UserDetailDto>
+                {
+                    IsSuccess = false,
+                    ErrorCode = finalCode,
+                    ErrorMessage = finalMessage
+                };
+            }
+
+            return new ApiResponse<UserDetailDto>
+            {
+                IsSuccess = true,
+                ErrorCode = AppErrorCode.None
+            };
+
         }
     }
 }

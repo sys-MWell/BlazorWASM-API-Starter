@@ -47,25 +47,38 @@ namespace Blazor.Web.Repository.User
             }
         }
 
-        //public async Task<ApiResponse<UserDetailDto>> UserRegisterAsync(RegisterUserDto registerCredentials)
-        //{
-        //    try
-        //    {
-        //        var url = $"{this.settings.AppApiBaseUrl}api/User/register";
-        //        var response = await this.httpClient.PostAsJsonAsync(url, registerCredentials);
-        //        if (!response.IsSuccessStatusCode)
-        //        {
-        //            this.logger.LogWarning("Register failed with status {StatusCode}", response.StatusCode);
-        //            return null!;
-        //        }
-        //        var registerResult = await response.Content.ReadFromJsonAsync<UserDetailDto>();
-        //        return registerResult!;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        this.logger.LogError(ex, "Error during user registration API call");
-        //        throw;
-        //    }
-        //}
+        /// <summary>
+        /// Attempts to register a new user using the provided registration credentials.
+        /// </summary>
+        /// <param name="registercredentials">The user information required for registration (email, password, etc.).</param>
+        /// <returns>
+        /// An <see cref="ApiResponse{T}"/> containing an <see cref="AuthResponseDto"/> on success
+        /// (including JWT token and user detail information); otherwise an error response with
+        /// <see cref="ApiResponse{T}.ErrorMessage"/> and optional <see cref="ApiResponse{T}.ErrorCode"/>.
+        /// </returns>
+        /// <remarks>
+        /// Sends a POST request to <c>AppAPI.Auth.Register</c>. The response is processed through
+        /// <see cref="ApiResponseRepoHelper.HandleHttpResponseAsync{T}(HttpResponseMessage)"/>.
+        /// </remarks>
+        /// <exception cref="Exception">Thrown when an unexpected error occurs during the HTTP request.</exception>
+        public async Task<ApiResponse<AuthResponseDto>> UserRegisterAsync(RegisterUserDto registercredentials)
+        {
+            try
+            {
+                var url = $"{this.settings.AppApiBaseUrl}{ApiSettings.Auth.Register}";
+                var response = await this.httpClient.PostAsJsonAsync(url, registercredentials);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    this.logger.LogWarning("register failed with status {StatusCode} error: {Error}", response.StatusCode, error);
+                }
+                return await ApiResponseRepoHelper.HandleHttpResponseAsync<AuthResponseDto>(response);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error during user registration API call");
+                throw;
+            }
+        }
     }
 }

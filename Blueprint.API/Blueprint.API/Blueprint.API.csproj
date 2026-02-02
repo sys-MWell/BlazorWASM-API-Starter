@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\Debug\net8.0\Blueprint.API.xml</DocumentationFile>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>70e83490-65b1-4c67-8ad0-21b9756ae489</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.14">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Template.Models\Template.Models.csproj" />
+    <!-- Removed invalid reference to missing App.API.Domain project -->
+    <!-- <ProjectReference Include="..\App.API.Domain\App.API.Domain.csproj" /> -->
+    <ProjectReference Include="..\Blueprint.API.Logic\Blueprint.API.Logic.csproj" />
+    <ProjectReference Include="..\Blueprint.API.Models\Blueprint.API.Models.csproj" />
+  </ItemGroup>
+
+  <!-- Exclude non-auth controllers from template -->
+  <ItemGroup>
+    <Compile Remove="Controllers\ItemController.cs" />
+    <Compile Remove="Controllers\ItemTypesController.cs" />
+  </ItemGroup>
+</Project>
