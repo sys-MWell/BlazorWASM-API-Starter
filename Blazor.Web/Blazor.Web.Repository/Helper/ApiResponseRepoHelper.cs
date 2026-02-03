@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using App.Models.Models;
+using Template.Models.Models;
 using Blazor.Web.Models.Models;
 
 namespace Blazor.Web.Repository.Shared

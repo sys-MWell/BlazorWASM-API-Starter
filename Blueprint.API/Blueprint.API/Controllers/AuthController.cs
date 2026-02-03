@@ -11,6 +11,9 @@ using Blueprint.API.Helpers;
 
 namespace Blueprint.API.Controllers
 {
+    /// <summary>
+    /// Handles authentication operations such as user registration and login.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -20,6 +23,12 @@ namespace Blueprint.API.Controllers
         private readonly IConfiguration _configuration;
         private readonly PasswordHasher<User> _passwordHasher = new();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuthController"/> class.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="userLogic">User logic service.</param>
+        /// <param name="configuration">Application configuration.</param>
         public AuthController(ILogger<AuthController> logger, IUserLogic userLogic, IConfiguration configuration)
         {
             _logger = logger;
@@ -27,6 +36,11 @@ namespace Blueprint.API.Controllers
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Registers a new user.
+        /// </summary>
+        /// <param name="userDetails">The registration details.</param>
+        /// <returns>An <see cref="IActionResult"/> with JWT token and basic user info if successful.</returns>
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterUserDto userDetails)
         {
@@ -48,6 +62,11 @@ namespace Blueprint.API.Controllers
             });
         }
 
+        /// <summary>
+        /// Logs a user in.
+        /// </summary>
+        /// <param name="dto">The login credentials.</param>
+        /// <returns>An <see cref="IActionResult"/> with JWT token and user details if successful.</returns>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
         {
@@ -69,6 +88,13 @@ namespace Blueprint.API.Controllers
             });
         }
 
+        /// <summary>
+        /// Generates a JWT token for the specified user.
+        /// </summary>
+        /// <param name="userId">User identifier.</param>
+        /// <param name="username">Username claim.</param>
+        /// <param name="role">Role claim.</param>
+        /// <returns>The signed JWT token string.</returns>
         private string GenerateJwtToken(string userId, string username, string role)
         {
             var jwtSettings = _configuration.GetSection("Jwt");

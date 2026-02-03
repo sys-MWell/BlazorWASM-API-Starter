@@ -1,6 +1,5 @@
 using Blazor.Web.Domain.Auth;
-using System.Threading.Tasks;
-using App.Models.Dtos;
+using Template.Models.Dtos;
 
 namespace Blazor.Web.Test.Utils
 {

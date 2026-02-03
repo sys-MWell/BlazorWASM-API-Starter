@@ -1,8 +1,6 @@
-﻿using App.Models.Dtos;
+﻿using Template.Models.Dtos;
 using Blazor.Web.Logic.Services.Validation;
 using Blazor.Web.Logic.User;
-using Blazor.Web.Models.Models;
-using System.ComponentModel.DataAnnotations;
 
 namespace Blazor.Web.Logic.Auth
 {

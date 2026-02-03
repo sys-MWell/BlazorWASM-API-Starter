@@ -1,5 +1,5 @@
-﻿using App.Models.Dtos;
-using App.Models.Models;
+﻿using Template.Models.Dtos;
+using Template.Models.Models;
 
 namespace Blazor.Web.Repository.User
 {

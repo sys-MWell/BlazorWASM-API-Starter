@@ -1,6 +1,5 @@
-﻿using App.Models.Dtos;
-using App.Models.Models;
-using Blazor.Web.Domain.Aggregates.UserAggregate;
+﻿using Template.Models.Dtos;
+using Template.Models.Models;
 using Blazor.Web.Domain.Auth;
 using Blazor.Web.Domain.Validation;
 using Blazor.Web.Repository.User;

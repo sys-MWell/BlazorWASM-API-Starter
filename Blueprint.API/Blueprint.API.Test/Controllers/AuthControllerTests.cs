@@ -1,23 +1,22 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
-using Blueprint.API.Controllers;
 using Blueprint.API.Logic.UserLogic;
 using Template.Models.Dtos;
 using Template.Models.Models;
+using Blueprint.API.Controllers; // Add this using directive at the top of the file
 
 namespace Blueprint.API.Test.Controllers
 {
     /// <summary>
-    /// Unit tests for the <see cref="Blueprint.API.Controllers.AuthController"/> endpoints.
+    /// Contains unit tests for the <see cref="Blueprint.API.Controllers.AuthController"/> endpoints.
     /// </summary>
     [TestClass]
     public sealed class AuthControllerTests
     {
+        /// <summary>
+        /// A minimal ILogger implementation for testing purposes.
+        /// </summary>
         private sealed class TestLogger<T> : ILogger<T>
         {
             public IDisposable BeginScope<TState>(TState state) => new Noop();
@@ -26,6 +25,9 @@ namespace Blueprint.API.Test.Controllers
             private sealed class Noop : System.IDisposable { public void Dispose() { } }
         }
 
+        /// <summary>
+        /// A stub implementation of <see cref="IUserLogic"/> for testing controller responses.
+        /// </summary>
         private sealed class StubUserLogic : IUserLogic
         {
             public ApiResponse<UserDetailDto>? RegisterUserResponse { get; set; }
@@ -42,6 +44,9 @@ namespace Blueprint.API.Test.Controllers
                 => Task.FromResult(RegisterUserResponse ?? new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = userRegister.Username, Role = userRegister.Role } });
         }
 
+        /// <summary>
+        /// Builds an in-memory IConfiguration for JWT settings.
+        /// </summary>
         private IConfiguration BuildConfig()
         {
             var dict = new Dictionary<string, string?>
@@ -55,7 +60,7 @@ namespace Blueprint.API.Test.Controllers
         }
 
         /// <summary>
-        /// Verifies Register returns 200 OK with a token and user payload on success.
+        /// Verifies that the RegisterUser endpoint returns a 200 OK result with a token and user payload on a successful registration.
         /// </summary>
         [TestMethod]
         public async Task RegisterUser_ReturnsOk_WithTokenAndUser()
@@ -91,7 +96,7 @@ namespace Blueprint.API.Test.Controllers
         }
 
         /// <summary>
-        /// Verifies Register maps logic-layer error to the correct HTTP status code.
+        /// Verifies that the RegisterUser endpoint correctly maps a logic-layer error (e.g., UserAlreadyExists) to the corresponding HTTP status code.
         /// </summary>
         [TestMethod]
         public async Task RegisterUser_MapsError_FromLogic()
@@ -116,7 +121,7 @@ namespace Blueprint.API.Test.Controllers
         }
 
         /// <summary>
-        /// Verifies Login returns 200 OK with a token and user payload on success.
+        /// Verifies that the Login endpoint returns a 200 OK result with a token and user payload on a successful login.
         /// </summary>
         [TestMethod]
         public async Task Login_ReturnsOk_WithTokenAndUser()
@@ -150,7 +155,7 @@ namespace Blueprint.API.Test.Controllers
         }
 
         /// <summary>
-        /// Verifies Login maps logic-layer error to the correct HTTP status code.
+        /// Verifies that the Login endpoint correctly maps a logic-layer error (e.g., PasswordInvalid) to the corresponding HTTP status code.
         /// </summary>
         [TestMethod]
         public async Task Login_MapsError_FromLogic()

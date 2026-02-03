@@ -5,6 +5,9 @@ using System.Collections;
 
 namespace Blueprint.API.Helpers
 {
+    /// <summary>
+    /// Provides helper methods for controller exception handling and standardized responses.
+    /// </summary>
     public static class ControllerExceptionHelper
     {
         /// <summary>

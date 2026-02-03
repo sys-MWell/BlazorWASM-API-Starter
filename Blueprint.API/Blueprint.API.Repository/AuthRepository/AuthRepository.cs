@@ -8,9 +8,17 @@ using Template.Models.Models;
 
 namespace Blueprint.API.Repository.UserRepository
 {
+    /// <summary>
+    /// Implements authentication-related data access using Dapper and stored procedures.
+    /// </summary>
     public class AuthRepository(DatabaseSettings databaseSettings)
         : RepositoryBase(databaseSettings), IAuthRepository
     {
+        /// <summary>
+        /// Retrieves user details by username.
+        /// </summary>
+        /// <param name="username">The username to search for.</param>
+        /// <returns>An <see cref="ApiResponse{T}"/> containing user details.</returns>
         public async Task<ApiResponse<IEnumerable<AuthDetailsDto>>> GetUserByUsername(string username)
         {
             DynamicParameters userParameters = new();
@@ -26,6 +34,11 @@ namespace Blueprint.API.Repository.UserRepository
             return ApiResponseRepoHelper.HandleDatabaseResponse(returnCode, responseMessage, successData: userDetail, successMessage: "User retrieved successfully.");
         }
 
+        /// <summary>
+        /// Retrieves login details for a user by username.
+        /// </summary>
+        /// <param name="username">The username to authenticate.</param>
+        /// <returns>An <see cref="ApiResponse{UserLoginResponseDto}"/> with login-related data.</returns>
         public async Task<ApiResponse<UserLoginResponseDto>> LoginUser(string username)
         {
             DynamicParameters userLoginParameters = new();
@@ -41,6 +54,11 @@ namespace Blueprint.API.Repository.UserRepository
             return ApiResponseRepoHelper.HandleDatabaseResponse(returnCode, responseMessage, successData: userDetail, successMessage: "User retrieved successfully.");
         }
 
+        /// <summary>
+        /// Registers a new user.
+        /// </summary>
+        /// <param name="userRegister">The registration data.</param>
+        /// <returns>An <see cref="ApiResponse{AuthDetailsDto}"/> with created user details.</returns>
         public async Task<ApiResponse<AuthDetailsDto>> RegisterUser(RegisterUserDto userRegister)
         {
             DynamicParameters userRegisterParameters = new();

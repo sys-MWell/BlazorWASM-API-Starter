@@ -1,4 +1,4 @@
-using App.Models.Models;
+using Template.Models.Models;
 
 namespace Blazor.Web.Domain.Validation
 {

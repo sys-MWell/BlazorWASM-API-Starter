@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/Shared/">
-    <Project Path="../Shared/App.Models/App.Models.csproj" />
+    <Project Path="../Shared/Template.Models/Template.Models.csproj" />
   </Folder>
   <Project Path="Blazor.Web.Client/Blazor.Web.Client.csproj" />
   <Project Path="Blazor.Web.Domain/Blazor.Web.Domain.csproj" />

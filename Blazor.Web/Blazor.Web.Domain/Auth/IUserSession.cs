@@ -1,4 +1,4 @@
-using App.Models.Dtos;
+using Template.Models.Dtos;
 
 namespace Blazor.Web.Domain.Auth
 {

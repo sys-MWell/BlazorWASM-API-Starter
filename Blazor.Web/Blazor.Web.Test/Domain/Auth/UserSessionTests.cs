@@ -1,6 +1,5 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Blazor.Web.Domain.Auth;
-using App.Models.Dtos;
+using Template.Models.Dtos;
 
 namespace App.Web.Test.Domain.Auth
 {

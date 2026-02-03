@@ -23,7 +23,7 @@
     <ProjectReference Include="..\Blazor.Web.Logic\Blazor.Web.Logic.csproj" />
     <ProjectReference Include="..\Blazor.Web.Models\Blazor.Web.Models.csproj" />
     <ProjectReference Include="..\Blazor.Web.Repository\Blazor.Web.Repository.csproj" />
-    <ProjectReference Include="..\..\Shared\App.Models\App.Models.csproj" />
+    <ProjectReference Include="..\..\Shared\Template.Models\Template.Models.csproj" />
   </ItemGroup>
 
   <ItemGroup>

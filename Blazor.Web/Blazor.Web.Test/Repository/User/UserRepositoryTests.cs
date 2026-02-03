@@ -1,15 +1,11 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Blazor.Web.Repository.User;
 using Blazor.Web.Domain.Shared;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using App.Web.Test.Utils;
-using App.Models.Dtos;
-using App.Models.Models;
+using Template.Models.Dtos;
+using Template.Models.Models;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
 
 namespace App.Web.Test.Repository.User
 {

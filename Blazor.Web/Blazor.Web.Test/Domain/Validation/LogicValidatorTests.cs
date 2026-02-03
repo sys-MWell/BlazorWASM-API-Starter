@@ -1,6 +1,5 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Blazor.Web.Domain.Validation;
-using App.Models.Models;
+using Template.Models.Models;
 
 namespace App.Web.Test.Domain.Validation
 {

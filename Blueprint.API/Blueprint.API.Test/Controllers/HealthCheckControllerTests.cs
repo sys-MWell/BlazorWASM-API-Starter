@@ -5,13 +5,13 @@ using Blueprint.API.Controllers;
 namespace Blueprint.API.Test.Controllers
 {
     /// <summary>
-    /// Unit tests for <see cref="HealthCheckController"/> health endpoint.
+    /// Contains unit tests for the <see cref="HealthCheckController"/>.
     /// </summary>
     [TestClass]
     public sealed class HealthCheckControllerTests
-    {   
+    {
         /// <summary>
-        /// Ensures the health endpoint returns HTTP 200 with a payload.
+        /// Verifies that the Get method on the HealthCheckController returns an OK result with a non-null payload.
         /// </summary>
         [TestMethod]
         public async Task Get_ReturnsOk_WithHealthPayload()

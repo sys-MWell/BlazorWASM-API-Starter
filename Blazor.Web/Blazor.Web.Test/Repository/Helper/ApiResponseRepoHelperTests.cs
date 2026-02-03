@@ -1,9 +1,6 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Blazor.Web.Repository.Shared;
-using App.Models.Models;
+using Template.Models.Models;
 using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace App.Web.Test.Repository.Helper
 {

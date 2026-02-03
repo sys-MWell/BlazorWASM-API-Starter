@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\App.Models\App.Models.csproj" />
+    <ProjectReference Include="..\..\Shared\Template.Models\Template.Models.csproj" />
     <ProjectReference Include="..\Blazor.Web.Models\Blazor.Web.Models.csproj" />
     <ProjectReference Include="..\Blazor.Web.Repository\Blazor.Web.Repository.csproj" />
     <ProjectReference Include="..\Blazor.Web.Domain\Blazor.Web.Domain.csproj" />

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\App.Models\App.Models.csproj" />
+    <ProjectReference Include="..\..\Shared\Template.Models\Template.Models.csproj" />
     <ProjectReference Include="..\Blazor.Web.Client\Blazor.Web.Client.csproj" />
     <ProjectReference Include="..\Blazor.Web.Domain\Blazor.Web.Domain.csproj" />
     <ProjectReference Include="..\Blazor.Web.Logic\Blazor.Web.Logic.csproj" />

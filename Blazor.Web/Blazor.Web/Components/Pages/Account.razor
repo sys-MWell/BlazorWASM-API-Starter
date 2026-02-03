@@ -102,8 +102,8 @@
 </AnonymousOnly>
 
     @code {
-    private global::App.Models.Dtos.LoginUserDto _loginUser = new();
-    private global::App.Models.Dtos.RegisterUserDto _registerUser = new();
+    private Template.Models.Dtos.LoginUserDto _loginUser = new();
+    private Template.Models.Dtos.RegisterUserDto _registerUser = new();
     private List<string> _validationErrors = new();
 
     private bool _showUserConfirmationModal;
@@ -128,7 +128,7 @@
         {
             await CompleteAuthenticationAsync();
         }
-        else if (result.ErrorCode == global::App.Models.Models.AppErrorCode.UserNotFound.ToString())
+        else if (result.ErrorCode == Template.Models.Models.AppErrorCode.UserNotFound.ToString())
         {
             _confirmationModalTitle = "Account Not Found";
             _confirmationModalBody = $"We could not find user '{_loginUser.Username}'. Switch to register?";
@@ -136,7 +136,7 @@
             _onConfirmAction = SwitchToRegister;
             _showUserConfirmationModal = true;
         }
-        else if (result.ErrorCode == global::App.Models.Models.AppErrorCode.NotFound.ToString())
+        else if (result.ErrorCode == Template.Models.Models.AppErrorCode.NotFound.ToString())
         {
             // HTTP 404 - API endpoint not found (infrastructure issue)
             _validationErrors.Add("Unable to connect to authentication service. Please contact support.");
@@ -155,7 +155,7 @@
         {
             await CompleteAuthenticationAsync();
         }
-        else if(result.ErrorCode == global::App.Models.Models.AppErrorCode.UserAlreadyExists.ToString())
+        else if (result.ErrorCode == Template.Models.Models.AppErrorCode.UserAlreadyExists.ToString())
         {
             _confirmationModalTitle = "Account Exists";
             _confirmationModalBody = $"An account with username '{_registerUser.Username}' already exists. Please choose a different username. Or switch to login?";
@@ -163,7 +163,7 @@
             _onConfirmAction = SwitchToLogin;
             _showUserConfirmationModal = true;
         }
-        else if (result.ErrorCode == global::App.Models.Models.AppErrorCode.NotFound.ToString())
+        else if (result.ErrorCode == Template.Models.Models.AppErrorCode.NotFound.ToString())
         {
             // HTTP 404 - API endpoint not found (infrastructure issue)
             _validationErrors.Add("Unable to connect to authentication service. Please contact support.");

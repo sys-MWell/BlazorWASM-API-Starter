@@ -1,5 +1,5 @@
-﻿using App.Models.Dtos;
-using App.Models.Models;
+﻿using Template.Models.Dtos;
+using Template.Models.Models;
 using Blazor.Web.Domain.Shared;
 using Blazor.Web.Repository.Shared;
 using Microsoft.Extensions.Logging;
@@ -7,6 +7,10 @@ using System.Net.Http.Json;
 
 namespace Blazor.Web.Repository.User
 {
+    /// <summary>
+    /// Repository responsible for user-related API operations such as login and registration.
+    /// Implements infrastructure concerns by communicating with the backend via <see cref="HttpClient"/>.
+    /// </summary>
     public class UserRepository(IHttpClientFactory httpClientFactory, ILogger<UserRepository> logger, ApiSettings settings) : IUserRepository
     {
         private readonly HttpClient httpClient = httpClientFactory.CreateClient("ApiClient");

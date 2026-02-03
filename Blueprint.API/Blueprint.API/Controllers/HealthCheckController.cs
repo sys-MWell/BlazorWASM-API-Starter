@@ -3,10 +3,17 @@ using System.Net.Sockets;
 
 namespace Blueprint.API.Controllers
 {
+    /// <summary>
+    /// Provides a simple health check endpoint to verify API readiness.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class HealthCheckController : ControllerBase
     {
+        /// <summary>
+        /// Returns the current health status of the API including port availability.
+        /// </summary>
+        /// <returns>An <see cref="IActionResult"/> with health details.</returns>
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -22,6 +29,12 @@ namespace Blueprint.API.Controllers
             return Ok(health);
         }
 
+        /// <summary>
+        /// Checks whether a TCP port is open on the specified host.
+        /// </summary>
+        /// <param name="host">The host to check.</param>
+        /// <param name="port">The port number to verify.</param>
+        /// <returns>True if the port is open; otherwise, false.</returns>
         private async Task<bool> IsPortOpen(string host, int port)
         {
             try

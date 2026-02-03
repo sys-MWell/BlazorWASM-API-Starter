@@ -1,11 +1,9 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Blazor.Web.Logic.User;
 using Blazor.Web.Domain.Validation;
 using Blazor.Web.Domain.Auth;
 using Blazor.Web.Repository.User;
-using App.Models.Dtos;
-using App.Models.Models;
-using System.Threading.Tasks;
+using Template.Models.Dtos;
+using Template.Models.Models;
 
 namespace Blazor.Web.Test.Logic.User
 {
@@ -20,6 +18,7 @@ namespace Blazor.Web.Test.Logic.User
             private readonly ApiResponse<AuthResponseDto> _response;
             public RepoStub(ApiResponse<AuthResponseDto> response) => _response = response;
             public Task<ApiResponse<AuthResponseDto>> UserLoginAsync(LoginUserDto loginCredentials) => Task.FromResult(_response);
+            public Task<ApiResponse<AuthResponseDto>> UserRegisterAsync(RegisterUserDto registerCredentials) => throw new NotImplementedException();
         }
 
         private sealed class ExpiringTokenStore : ITokenStore

@@ -12,6 +12,10 @@ namespace Blueprint.API.Helpers
         /// <summary>
         /// Converts an ApiResponse to an IActionResult with appropriate HTTP status code.
         /// </summary>
+        /// <typeparam name="T">Type of the ApiResponse data.</typeparam>
+        /// <param name="response">The response to convert.</param>
+        /// <param name="controller">The controller to produce action results.</param>
+        /// <returns>An <see cref="IActionResult"/> representing the response.</returns>
         public static IActionResult ToActionResult<T>(this ApiResponse<T> response, ControllerBase controller)
         {
             if (response.IsSuccess)
