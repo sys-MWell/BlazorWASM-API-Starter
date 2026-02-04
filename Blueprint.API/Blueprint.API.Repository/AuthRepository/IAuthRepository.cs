@@ -13,20 +13,21 @@ namespace Blueprint.API.Repository.UserRepository
         /// </summary>
         /// <param name="username">The username of the user to retrieve.</param>
         /// <returns>An <see cref="ApiResponse{T}"/> containing user details if found.</returns>
-        Task<ApiResponse<IEnumerable<AuthDetailsDto>>> GetUserByUsername(string username);
+        Task<ApiResponse<IEnumerable<UserDetailDto>>> GetUserByUsername(string username);
 
-        /// <summary>
-        /// Authenticates a user with the provided login credentials.
-        /// </summary>
-        /// <param name="userLogin">The login credentials of the user.</param>
-        /// <returns>An <see cref="ApiResponse{UserLoginResponseDto}"/> containing user details if authentication is successful.</returns>
-        Task<ApiResponse<UserLoginResponseDto>> LoginUser(string userLogin);
 
         /// <summary>
         /// Registers a new user with the provided registration details.
         /// </summary>
         /// <param name="userRegister">The registration details of the new user.</param>
-        /// <returns>An <see cref="ApiResponse{AuthDetailsDto}"/> containing user details if registration is successful.</returns>
-        Task<ApiResponse<AuthDetailsDto>> RegisterUser(RegisterUserDto userRegister);
+        /// <returns>An <see cref="ApiResponse{UserDetailDto}"/> containing user details if registration is successful.</returns>
+        Task<ApiResponse<UserDetailDto>> RegisterUser(RegisterUserDto userRegister);
+
+        /// <summary>
+        /// Retrieves the stored password hash for a given username.
+        /// </summary>
+        /// <param name="username">The username to look up.</param>
+        /// <returns>An <see cref="ApiResponse{String}"/> containing the stored password hash.</returns>
+        Task<ApiResponse<string>> GetPasswordHashByUsername(string username);
     }
 }

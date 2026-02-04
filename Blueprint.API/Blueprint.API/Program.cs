@@ -1,4 +1,5 @@
 using Blueprint.API.Logic.UserLogic;
+using Blueprint.API.Logic.Helpers;
 using Blueprint.API.Repository.UserRepository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -58,7 +59,8 @@ builder.Services.AddSingleton(new DatabaseSettings
     AppDbConnectionString = connectionString
 });
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-builder.Services.AddScoped<IUserLogic, UserLogic>();
+builder.Services.AddScoped<IAuthLogic, AuthLogic>();
+builder.Services.AddSingleton<IPasswordVerifier, PasswordVerifier>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var issuer = jwtSettings["Issuer"] ?? string.Empty;

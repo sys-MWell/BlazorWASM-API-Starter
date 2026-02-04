@@ -26,9 +26,9 @@ namespace Blueprint.API.Test.Controllers
         }
 
         /// <summary>
-        /// A stub implementation of <see cref="IUserLogic"/> for testing controller responses.
+        /// A stub implementation of <see cref="IAuthLogic"/> for testing controller responses.
         /// </summary>
-        private sealed class StubUserLogic : IUserLogic
+        private sealed class StubUserLogic : IAuthLogic
         {
             public ApiResponse<UserDetailDto>? RegisterUserResponse { get; set; }
             public ApiResponse<IEnumerable<UserDetailDto>>? LoginUserResponse { get; set; }
@@ -79,14 +79,14 @@ namespace Blueprint.API.Test.Controllers
 
             var result = await controller.RegisterUser(new RegisterUserDto { Username = "bob", UserPassword = "password123", Role = "Admin" });
 
-            var ok = result as OkObjectResult;
+            var ok = result.Result as OkObjectResult;
             Assert.IsNotNull(ok);
             var payload = ok!.Value!;
-            var tokenProp = payload.GetType().GetProperty("token");
+            var tokenProp = payload.GetType().GetProperty("Token");
             Assert.IsNotNull(tokenProp);
             var tokenVal = tokenProp!.GetValue(payload);
             Assert.IsNotNull(tokenVal);
-            var userProp = payload.GetType().GetProperty("user");
+            var userProp = payload.GetType().GetProperty("User");
             Assert.IsNotNull(userProp);
             var userVal = userProp!.GetValue(payload)!;
             var username = userVal.GetType().GetProperty("Username")!.GetValue(userVal) as string;
@@ -115,7 +115,7 @@ namespace Blueprint.API.Test.Controllers
 
             var result = await controller.RegisterUser(new RegisterUserDto { Username = "bob", UserPassword = "password123" });
 
-            var conflict = result as ObjectResult;
+            var conflict = result.Result as ObjectResult;
             Assert.IsNotNull(conflict);
             Assert.AreEqual(409, conflict!.StatusCode);
         }
@@ -140,14 +140,14 @@ namespace Blueprint.API.Test.Controllers
 
             var result = await controller.Login(new LoginUserDto { Username = "alice", UserPassword = "p@ss" });
 
-            var ok = result as OkObjectResult;
+            var ok = result.Result as OkObjectResult;
             Assert.IsNotNull(ok);
             var payload = ok!.Value!;
-            var tokenProp = payload.GetType().GetProperty("token");
+            var tokenProp = payload.GetType().GetProperty("Token");
             Assert.IsNotNull(tokenProp);
             var tokenVal = tokenProp!.GetValue(payload);
             Assert.IsNotNull(tokenVal);
-            var userProp = payload.GetType().GetProperty("user");
+            var userProp = payload.GetType().GetProperty("User");
             Assert.IsNotNull(userProp);
             var userVal = userProp!.GetValue(payload)!;
             var username = userVal.GetType().GetProperty("Username")!.GetValue(userVal) as string;
@@ -174,7 +174,7 @@ namespace Blueprint.API.Test.Controllers
 
             var result = await controller.Login(new LoginUserDto { Username = "eve", UserPassword = "bad" });
 
-            var unauthorized = result as ObjectResult;
+            var unauthorized = result.Result as ObjectResult;
             Assert.IsNotNull(unauthorized);
             Assert.AreEqual(401, unauthorized!.StatusCode);
         }

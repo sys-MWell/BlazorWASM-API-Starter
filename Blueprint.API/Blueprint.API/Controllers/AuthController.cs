@@ -19,7 +19,7 @@ namespace Blueprint.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
-        private readonly IUserLogic _userLogic;
+        private readonly IAuthLogic _userLogic;
         private readonly IConfiguration _configuration;
         private readonly PasswordHasher<User> _passwordHasher = new();
 
@@ -29,7 +29,7 @@ namespace Blueprint.API.Controllers
         /// <param name="logger">The logger instance.</param>
         /// <param name="userLogic">User logic service.</param>
         /// <param name="configuration">Application configuration.</param>
-        public AuthController(ILogger<AuthController> logger, IUserLogic userLogic, IConfiguration configuration)
+        public AuthController(ILogger<AuthController> logger, IAuthLogic userLogic, IConfiguration configuration)
         {
             _logger = logger;
             _userLogic = userLogic;
@@ -40,9 +40,9 @@ namespace Blueprint.API.Controllers
         /// Registers a new user.
         /// </summary>
         /// <param name="userDetails">The registration details.</param>
-        /// <returns>An <see cref="IActionResult"/> with JWT token and basic user info if successful.</returns>
+        /// <returns>An <see cref="IActionResult"/> with an <see cref="AuthResponseDto"/> payload if successful.</returns>
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterUser([FromBody] RegisterUserDto userDetails)
+        public async Task<ActionResult<AuthResponseDto>> RegisterUser([FromBody] RegisterUserDto userDetails)
         {
             var result = await _userLogic.RegisterUser(userDetails);
 
@@ -55,20 +55,22 @@ namespace Blueprint.API.Controllers
 
             var token = GenerateJwtToken(user.Id.ToString(), user.Username, user.Role ?? "User");
 
-            return Ok(new
+            var response = new AuthResponseDto
             {
-                token,
-                user = new { user.Username, user.Role }
-            });
+                Token = token,
+                User = new UserDetailDto { Id = user.Id, Username = user.Username, Role = user.Role }
+            };
+
+            return Ok(response);
         }
 
         /// <summary>
         /// Logs a user in.
         /// </summary>
         /// <param name="dto">The login credentials.</param>
-        /// <returns>An <see cref="IActionResult"/> with JWT token and user details if successful.</returns>
+        /// <returns>An <see cref="IActionResult"/> with an <see cref="AuthResponseDto"/> payload if successful.</returns>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
+        public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginUserDto dto)
         {
             var userDetails = await _userLogic.LoginUser(dto);
 
@@ -81,11 +83,13 @@ namespace Blueprint.API.Controllers
 
             var token = GenerateJwtToken(user.Id.ToString(), user.Username, user.Role ?? "User");
 
-            return Ok(new
+            var response = new AuthResponseDto
             {
-                token,
-                user,
-            });
+                Token = token,
+                User = new UserDetailDto { Id = user.Id, Username = user.Username, Role = user.Role }
+            };
+
+            return Ok(response);
         }
 
         /// <summary>

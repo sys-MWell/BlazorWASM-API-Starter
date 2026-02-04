@@ -4,9 +4,9 @@ using Template.Models.Models;
 namespace Blueprint.API.Logic.UserLogic
 {
     /// <summary>
-    /// Provides user-related logic such as registration, login, and retrieval by username.
+    /// Provides authentication-related logic such as registration, login, and retrieval by username.
     /// </summary>
-    public interface IUserLogic
+    public interface IAuthLogic
     {
         /// <summary>
         /// Registers a new user with the provided registration details.

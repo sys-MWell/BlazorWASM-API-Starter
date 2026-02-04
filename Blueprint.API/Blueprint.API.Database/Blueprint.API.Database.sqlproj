@@ -64,7 +64,7 @@
     <Build Include="dbo\Tables\Users.sql" />
     <Build Include="dbo\Stored Procedures\usp_RegisterUser.sql" />
     <Build Include="dbo\Stored Procedures\usp_GetUserSummaryByUsername.sql" />
-    <Build Include="dbo\Stored Procedures\usp_GetUserForLogin.sql" />
+    <Build Include="dbo\Stored Procedures\usp_ValidateUserLogin.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DB-to-Local-SqlSchemaCompare.scmp" />
