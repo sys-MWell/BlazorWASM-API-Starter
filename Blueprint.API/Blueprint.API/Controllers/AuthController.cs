@@ -66,7 +66,7 @@ namespace Blueprint.API.Controllers
             if (!userDetails.IsSuccess)
                 return userDetails.ToActionResult(this);
 
-            var user = userDetails.Data?.FirstOrDefault();
+            var user = userDetails.Data;
             if (user == null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = "User details missing." });
 

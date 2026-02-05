@@ -46,7 +46,7 @@ namespace Blueprint.API.Logic.UserLogic
         /// <returns>
         /// An <see cref="ApiResponse{UserDetailDto}"/> containing the user's details if authentication is successful.
         /// </returns>
-        public async Task<ApiResponse<UserDetailDto> LoginUser(LoginUserDto userLogin)
+        public async Task<ApiResponse<UserDetailDto>> LoginUser(LoginUserDto userLogin)
         {
             // Check if user exists
             var existingUser = await GetUserByUsername(userLogin.Username);

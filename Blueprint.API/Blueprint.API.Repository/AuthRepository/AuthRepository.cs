@@ -5,6 +5,7 @@ using Blueprint.API.Repository.Helper;
 using Blueprint.API.Models.Shared;
 using Template.Models.Dtos;
 using Template.Models.Models;
+using Template.Models; // for AuthMappings
 
 namespace Blueprint.API.Repository.UserRepository
 {
@@ -27,7 +28,7 @@ namespace Blueprint.API.Repository.UserRepository
             p.Add("@ErrorCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             // Call a dedicated sproc that returns the stored password hash for the given username
-            var loginRow = (await ExecuteQuery<User>("dbo.usp_GetPasswordHashByUsername", CommandType.StoredProcedure, p));
+            var loginRow = await ExecuteQuery<User>("dbo.usp_GetPasswordHashByUsername", CommandType.StoredProcedure, p);
             var hash = loginRow?.UserPassword;
 
             string responseMessage = p.Get<string>("@ResponseMessage");
@@ -48,12 +49,13 @@ namespace Blueprint.API.Repository.UserRepository
             userParameters.Add("@ResponseMessage", dbType: DbType.String, size: 255, direction: ParameterDirection.Output);
             userParameters.Add("@ErrorCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            var dbUsers = await ExecuteQuery<User>("dbo.usp_GetUserSummaryByUsername", CommandType.StoredProcedure, userParameters);
+            var user = await ExecuteQuery<User>("dbo.usp_GetUserSummaryByUsername", CommandType.StoredProcedure, userParameters);
+            var dto = user?.ToUserDetailDto();
         
             string responseMessage = userParameters.Get<string>("@ResponseMessage");
             int returnCode = userParameters.Get<int>("@ErrorCode");
 
-            return ApiResponseRepoHelper.HandleDatabaseResponse<UserDetailDto>(returnCode, responseMessage, successData: dbUsers, successMessage: "User retrieved successfully.");
+            return ApiResponseRepoHelper.HandleDatabaseResponse<UserDetailDto>(returnCode, responseMessage, successData: dto, successMessage: "User retrieved successfully.");
         }
 
 
@@ -71,12 +73,13 @@ namespace Blueprint.API.Repository.UserRepository
             userRegisterParameters.Add("@ResponseMessage", dbType: DbType.String, size: 255, direction: ParameterDirection.Output);
             userRegisterParameters.Add("@ErrorCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            var dbUser = (await ExecuteQuery<User>("dbo.usp_RegisterUser", CommandType.StoredProcedure, userRegisterParameters));
+            var created = await ExecuteQuery<User>("dbo.usp_RegisterUser", CommandType.StoredProcedure, userRegisterParameters);
+            var dto = created?.ToUserDetailDto();
 
             string responseMessage = userRegisterParameters.Get<string>("@ResponseMessage");
             int returnCode = userRegisterParameters.Get<int>("@ErrorCode");
 
-            return ApiResponseRepoHelper.HandleDatabaseResponse<UserDetailDto>(returnCode, responseMessage, successData: dbUser, successMessage: "User registered successfully.");
+            return ApiResponseRepoHelper.HandleDatabaseResponse<UserDetailDto>(returnCode, responseMessage, successData: dto, successMessage: "User registered successfully.");
         }
     }
 }

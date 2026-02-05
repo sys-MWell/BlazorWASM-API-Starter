@@ -24,7 +24,7 @@ namespace Blueprint.API.Logic.UserLogic
         /// <returns>
         /// An <see cref="ApiResponse{UserDetailDto}"/> containing the user's details if authentication is successful.
         /// </returns>
-        Task<ApiResponse<IEnumerable<UserDetailDto>>> LoginUser(LoginUserDto userLogin);
+        Task<ApiResponse<UserDetailDto>> LoginUser(LoginUserDto userLogin);
 
         /// <summary>
         /// Retrieves user details by username.
@@ -33,6 +33,6 @@ namespace Blueprint.API.Logic.UserLogic
         /// <returns>
         /// An <see cref="ApiResponse{UserDetailDto}"/> containing the user's details if found.
         /// </returns>
-        Task<ApiResponse<IEnumerable<UserDetailDto>>> GetUserByUsername(string username);
+        Task<ApiResponse<UserDetailDto>> GetUserByUsername(string username);
     }
 }
