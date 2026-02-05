@@ -27,7 +27,6 @@ namespace Blueprint.API.Repository.UserRepository
             p.Add("@ResponseMessage", dbType: DbType.String, size: 255, direction: ParameterDirection.Output);
             p.Add("@ErrorCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            // Call a dedicated sproc that returns the stored password hash for the given username
             var loginRow = await ExecuteQuery<User>("dbo.usp_GetPasswordHashByUsername", CommandType.StoredProcedure, p);
             var hash = loginRow?.UserPassword;
 

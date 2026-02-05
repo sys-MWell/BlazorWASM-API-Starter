@@ -61,6 +61,7 @@ builder.Services.AddSingleton(new DatabaseSettings
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthLogic, AuthLogic>();
 builder.Services.AddSingleton<IPasswordVerifier, PasswordVerifier>();
+builder.Services.AddSingleton<ITokenProvider, TokenProvider>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var issuer = jwtSettings["Issuer"] ?? string.Empty;
