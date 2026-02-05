@@ -5,6 +5,7 @@ using Blueprint.API.Logic.UserLogic;
 using Template.Models.Dtos;
 using Template.Models.Models;
 using Blueprint.API.Controllers; // Add this using directive at the top of the file
+using Blueprint.API.Logic.Helpers;
 
 namespace Blueprint.API.Test.Controllers
 {
@@ -14,9 +15,6 @@ namespace Blueprint.API.Test.Controllers
     [TestClass]
     public sealed class AuthControllerTests
     {
-        /// <summary>
-        /// A minimal ILogger implementation for testing purposes.
-        /// </summary>
         private sealed class TestLogger<T> : ILogger<T>
         {
             public IDisposable BeginScope<TState>(TState state) => new Noop();
@@ -25,28 +23,30 @@ namespace Blueprint.API.Test.Controllers
             private sealed class Noop : System.IDisposable { public void Dispose() { } }
         }
 
-        /// <summary>
-        /// A stub implementation of <see cref="IAuthLogic"/> for testing controller responses.
-        /// </summary>
         private sealed class StubUserLogic : IAuthLogic
         {
             public ApiResponse<UserDetailDto>? RegisterUserResponse { get; set; }
-            public ApiResponse<IEnumerable<UserDetailDto>>? LoginUserResponse { get; set; }
-            public ApiResponse<IEnumerable<UserDetailDto>>? GetByUsernameResponse { get; set; }
+            public ApiResponse<UserDetailDto>? LoginUserResponse { get; set; }
+            public ApiResponse<UserDetailDto>? GetByUsernameResponse { get; set; }
 
-            public Task<ApiResponse<IEnumerable<UserDetailDto>>> GetUserByUsername(string username)
-                => Task.FromResult(GetByUsernameResponse ?? new ApiResponse<IEnumerable<UserDetailDto>> { IsSuccess = true, Data = Enumerable.Empty<UserDetailDto>() });
+            public Task<ApiResponse<UserDetailDto>> GetUserByUsername(string username)
+                => Task.FromResult(GetByUsernameResponse ?? new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = username } });
 
-            public Task<ApiResponse<IEnumerable<UserDetailDto>>> LoginUser(LoginUserDto userLogin)
-                => Task.FromResult(LoginUserResponse ?? new ApiResponse<IEnumerable<UserDetailDto>> { IsSuccess = true, Data = Enumerable.Empty<UserDetailDto>() });
+            public Task<ApiResponse<UserDetailDto>> LoginUser(LoginUserDto userLogin)
+                => Task.FromResult(LoginUserResponse ?? new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = userLogin.Username } });
 
             public Task<ApiResponse<UserDetailDto>> RegisterUser(RegisterUserDto userRegister)
-                => Task.FromResult(RegisterUserResponse ?? new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = userRegister.Username, Role = userRegister.Role } });
+                => Task.FromResult(RegisterUserResponse ?? new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = userRegister.Username} });
         }
 
-        /// <summary>
-        /// Builds an in-memory IConfiguration for JWT settings.
-        /// </summary>
+        private sealed class StubTokenProvider : ITokenProvider
+        {
+            public AuthResponseDto GenerateAuthResponse(UserDetailDto user)
+            {
+                return new AuthResponseDto { Token = "stub-token", User = user };
+            }
+        }
+
         private IConfiguration BuildConfig()
         {
             var dict = new Dictionary<string, string?>
@@ -59,9 +59,6 @@ namespace Blueprint.API.Test.Controllers
             return new ConfigurationBuilder().AddInMemoryCollection(dict!).Build();
         }
 
-        /// <summary>
-        /// Verifies that the RegisterUser endpoint returns a 200 OK result with a token and user payload on a successful registration.
-        /// </summary>
         [TestMethod]
         public async Task RegisterUser_ReturnsOk_WithTokenAndUser()
         {
@@ -75,29 +72,19 @@ namespace Blueprint.API.Test.Controllers
                     ErrorCode = AppErrorCode.None
                 }
             };
-            var controller = new AuthController(logger, logic, BuildConfig());
+            var controller = new AuthController(logger, logic, new StubTokenProvider());
 
-            var result = await controller.RegisterUser(new RegisterUserDto { Username = "bob", UserPassword = "password123", Role = "Admin" });
+            var result = await controller.RegisterUser(new RegisterUserDto { Username = "bob", UserPassword = "password123" });
 
             var ok = result.Result as OkObjectResult;
             Assert.IsNotNull(ok);
-            var payload = ok!.Value!;
-            var tokenProp = payload.GetType().GetProperty("Token");
-            Assert.IsNotNull(tokenProp);
-            var tokenVal = tokenProp!.GetValue(payload);
-            Assert.IsNotNull(tokenVal);
-            var userProp = payload.GetType().GetProperty("User");
-            Assert.IsNotNull(userProp);
-            var userVal = userProp!.GetValue(payload)!;
-            var username = userVal.GetType().GetProperty("Username")!.GetValue(userVal) as string;
-            var role = userVal.GetType().GetProperty("Role")!.GetValue(userVal) as string;
-            Assert.AreEqual("bob", username);
-            Assert.AreEqual("Admin", role);
+            var payload = ok!.Value! as AuthResponseDto;
+            Assert.IsNotNull(payload);
+            Assert.AreEqual("bob", payload!.User.Username);
+            Assert.AreEqual("Admin", payload!.User.Role);
+            Assert.AreEqual("stub-token", payload!.Token);
         }
 
-        /// <summary>
-        /// Verifies that the RegisterUser endpoint correctly maps a logic-layer error (e.g., UserAlreadyExists) to the corresponding HTTP status code.
-        /// </summary>
         [TestMethod]
         public async Task RegisterUser_MapsError_FromLogic()
         {
@@ -111,7 +98,7 @@ namespace Blueprint.API.Test.Controllers
                     ErrorCode = AppErrorCode.UserAlreadyExists
                 }
             };
-            var controller = new AuthController(logger, logic, BuildConfig());
+            var controller = new AuthController(logger, logic, new StubTokenProvider());
 
             var result = await controller.RegisterUser(new RegisterUserDto { Username = "bob", UserPassword = "password123" });
 
@@ -120,57 +107,45 @@ namespace Blueprint.API.Test.Controllers
             Assert.AreEqual(409, conflict!.StatusCode);
         }
 
-        /// <summary>
-        /// Verifies that the Login endpoint returns a 200 OK result with a token and user payload on a successful login.
-        /// </summary>
         [TestMethod]
         public async Task Login_ReturnsOk_WithTokenAndUser()
         {
             var logger = new TestLogger<AuthController>();
             var logic = new StubUserLogic
             {
-                LoginUserResponse = new ApiResponse<IEnumerable<UserDetailDto>>
+                LoginUserResponse = new ApiResponse<UserDetailDto>
                 {
                     IsSuccess = true,
-                    Data = new[] { new UserDetailDto { Id = 1, Username = "alice", Role = "User" } },
+                    Data = new UserDetailDto { Id = 1, Username = "alice", Role = "User" },
                     ErrorCode = AppErrorCode.None
                 }
             };
-            var controller = new AuthController(logger, logic, BuildConfig());
+            var controller = new AuthController(logger, logic, new StubTokenProvider());
 
             var result = await controller.Login(new LoginUserDto { Username = "alice", UserPassword = "p@ss" });
 
             var ok = result.Result as OkObjectResult;
             Assert.IsNotNull(ok);
-            var payload = ok!.Value!;
-            var tokenProp = payload.GetType().GetProperty("Token");
-            Assert.IsNotNull(tokenProp);
-            var tokenVal = tokenProp!.GetValue(payload);
-            Assert.IsNotNull(tokenVal);
-            var userProp = payload.GetType().GetProperty("User");
-            Assert.IsNotNull(userProp);
-            var userVal = userProp!.GetValue(payload)!;
-            var username = userVal.GetType().GetProperty("Username")!.GetValue(userVal) as string;
-            Assert.AreEqual("alice", username);
+            var payload = ok!.Value! as AuthResponseDto;
+            Assert.IsNotNull(payload);
+            Assert.AreEqual("alice", payload!.User.Username);
+            Assert.AreEqual("stub-token", payload!.Token);
         }
 
-        /// <summary>
-        /// Verifies that the Login endpoint correctly maps a logic-layer error (e.g., PasswordInvalid) to the corresponding HTTP status code.
-        /// </summary>
         [TestMethod]
         public async Task Login_MapsError_FromLogic()
         {
             var logger = new TestLogger<AuthController>();
             var logic = new StubUserLogic
             {
-                LoginUserResponse = new ApiResponse<IEnumerable<UserDetailDto>>
+                LoginUserResponse = new ApiResponse<UserDetailDto>
                 {
                     IsSuccess = false,
                     ErrorMessage = "Invalid password",
                     ErrorCode = AppErrorCode.PasswordInvalid
                 }
             };
-            var controller = new AuthController(logger, logic, BuildConfig());
+            var controller = new AuthController(logger, logic, new StubTokenProvider());
 
             var result = await controller.Login(new LoginUserDto { Username = "eve", UserPassword = "bad" });
 

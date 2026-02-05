@@ -20,14 +20,15 @@ namespace Blueprint.API.Logic.UserLogic
         /// <returns>
         /// An <see cref="ApiResponse{T}"/> containing the user's details if found.
         /// </returns>
-        public async Task<ApiResponse<IEnumerable<UserDetailDto>>> GetUserByUsername(string username)
+        public async Task<ApiResponse<UserDetailDto>> GetUserByUsername(string username)
         {
             var repositoryResponse = await _userRepository.GetUserByUsername(username);
 
-            var mapped = repositoryResponse.Data ?? Array.Empty<UserDetailDto>();
+            // Fix: Use object initializer with required Id property set to 0 (or another default value)
+            var mapped = repositoryResponse.Data ?? new UserDetailDto { Id = 0, Username = string.Empty, Role = null };
 
             return ApiResponseLogicHelper.HandleRepositoryResponse(
-                new ApiResponse<IEnumerable<UserDetailDto>>
+                new ApiResponse<UserDetailDto>
                 {
                     IsSuccess = repositoryResponse.IsSuccess,
                     ErrorMessage = repositoryResponse.ErrorMessage,
@@ -45,41 +46,38 @@ namespace Blueprint.API.Logic.UserLogic
         /// <returns>
         /// An <see cref="ApiResponse{UserDetailDto}"/> containing the user's details if authentication is successful.
         /// </returns>
-        public async Task<ApiResponse<IEnumerable<UserDetailDto>>> LoginUser(LoginUserDto userLogin)
+        public async Task<ApiResponse<UserDetailDto>> LoginUser(LoginUserDto userLogin)
         {
             // Check if user exists
             var existingUser = await GetUserByUsername(userLogin.Username);
 
             if (existingUser.IsSuccess == false)
             {
-                return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Username does not exist", AppErrorCode.UserNotFound);
+                return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("Username does not exist", AppErrorCode.UserNotFound);
             }
 
             var hashResponse = await _userRepository.GetPasswordHashByUsername(userLogin.Username);
             if (!hashResponse.IsSuccess || string.IsNullOrWhiteSpace(hashResponse.Data))
             {
-                return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Invalid credentials", AppErrorCode.Unauthorized);
+                return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("Invalid credentials", AppErrorCode.Unauthorized);
             }
 
             var verified = _passwordVerifier.Verify(userLogin.Username, hashResponse.Data!, userLogin.UserPassword);
             if (!verified)
             {
-                return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Invalid password", AppErrorCode.PasswordInvalid);
+                return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("Invalid password", AppErrorCode.PasswordInvalid);
             }
 
             if (!existingUser.IsSuccess || existingUser.Data is null)
             {
-                return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("User details returned with faults", AppErrorCode.ServerError);
+                return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("User details returned with faults", AppErrorCode.ServerError);
             }
 
-            var successData = new List<UserDetailDto>
+            var successData = new UserDetailDto
             {
-                new UserDetailDto
-                {
-                    Id = existingUser.Data!.First().Id,
-                    Username = existingUser.Data.First().Username,
-                    Role = existingUser.Data.First().Role
-                }
+                Id = existingUser.Data!.Id,
+                Username = existingUser.Data.Username,
+                Role = existingUser.Data.Role
             };
 
             // Reuse existingUser's status to craft final response
@@ -116,7 +114,7 @@ namespace Blueprint.API.Logic.UserLogic
             var domainUser = new User
             {
                 Username = userRegister.Username,
-                Role = userRegister.Role ?? "User",
+                Role = "User",
                 UserPassword = hashedPassword
             };
 

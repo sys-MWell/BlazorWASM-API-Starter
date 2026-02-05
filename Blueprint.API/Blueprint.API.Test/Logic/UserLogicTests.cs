@@ -18,11 +18,11 @@ namespace Blueprint.API.Test.Logic
     {
         private sealed class StubRepo : IAuthRepository
         {
-            public ApiResponse<IEnumerable<UserDetailDto>>? GetByUsernameResponse { get; set; }
+            public ApiResponse<UserDetailDto>? GetByUsernameResponse { get; set; }
             public ApiResponse<UserDetailDto>? RegisterResponse { get; set; }
             public ApiResponse<string>? HashResponse { get; set; }
 
-            public Task<ApiResponse<IEnumerable<UserDetailDto>>> GetUserByUsername(string username) => Task.FromResult(GetByUsernameResponse!);
+            public Task<ApiResponse<UserDetailDto>> GetUserByUsername(string username) => Task.FromResult(GetByUsernameResponse!);
             public Task<ApiResponse<UserDetailDto>> RegisterUser(User user) => Task.FromResult(RegisterResponse!);
             public Task<ApiResponse<string>> GetPasswordHashByUsername(string username) => Task.FromResult(HashResponse!);
         }
@@ -35,10 +35,10 @@ namespace Blueprint.API.Test.Logic
         {
             var repo = new StubRepo
             {
-                GetByUsernameResponse = new ApiResponse<IEnumerable<UserDetailDto>>
+                GetByUsernameResponse = new ApiResponse<UserDetailDto>
                 {
                     IsSuccess = true,
-                    Data = new[] { new UserDetailDto { Id = 42, Username = "bob", Role = "Admin" } },
+                    Data = new UserDetailDto { Id = 42, Username = "bob", Role = "Admin" },
                     ErrorCode = AppErrorCode.None
                 },
                 HashResponse = new ApiResponse<string> { IsSuccess = true, Data = new Microsoft.AspNetCore.Identity.PasswordHasher<string>().HashPassword("bob", "x") }
@@ -47,8 +47,8 @@ namespace Blueprint.API.Test.Logic
 
             var res = await logic.GetUserByUsername("bob");
             Assert.IsTrue(res.IsSuccess);
-            Assert.AreEqual(42, res.Data!.First().Id);
-            Assert.AreEqual("bob", res.Data!.First().Username);
+            Assert.AreEqual(42, res.Data!.Id);
+            Assert.AreEqual("bob", res.Data!.Username);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Blueprint.API.Test.Logic
         {
             var repo = new StubRepo
             {
-                GetByUsernameResponse = new ApiResponse<IEnumerable<UserDetailDto>> { IsSuccess = false, ErrorCode = AppErrorCode.UserNotFound },
+                GetByUsernameResponse = new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorCode = AppErrorCode.UserNotFound },
                 HashResponse = new ApiResponse<string> { IsSuccess = false, ErrorCode = AppErrorCode.UserNotFound }
             };
             var logic = new AuthLogic(repo, new PasswordVerifier());
@@ -77,7 +77,7 @@ namespace Blueprint.API.Test.Logic
         {
             var repo = new StubRepo
             {
-                GetByUsernameResponse = new ApiResponse<IEnumerable<UserDetailDto>> { IsSuccess = true, Data = new[] { new UserDetailDto { Id = 1, Username = "u" } } },
+                GetByUsernameResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = "u" } },
                 HashResponse = new ApiResponse<string> { IsSuccess = true, Data = new Microsoft.AspNetCore.Identity.PasswordHasher<string>().HashPassword("u", "correct-password") }
             };
             var logic = new AuthLogic(repo, new PasswordVerifier());
@@ -95,7 +95,7 @@ namespace Blueprint.API.Test.Logic
         {
             var repo = new StubRepo
             {
-                GetByUsernameResponse = new ApiResponse<IEnumerable<UserDetailDto>> { IsSuccess = false, ErrorCode = AppErrorCode.NotFound },
+                GetByUsernameResponse = new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorCode = AppErrorCode.NotFound },
                 RegisterResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 2, Username = "abc" } },
                 HashResponse = new ApiResponse<string> { IsSuccess = false, ErrorCode = AppErrorCode.NotFound }
             };
@@ -114,13 +114,13 @@ namespace Blueprint.API.Test.Logic
         {
             var repo = new StubRepo
             {
-                GetByUsernameResponse = new ApiResponse<IEnumerable<UserDetailDto>> { IsSuccess = false, ErrorCode = AppErrorCode.NotFound },
+                GetByUsernameResponse = new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorCode = AppErrorCode.NotFound },
                 RegisterResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 7, Username = "john", Role = "User" } },
                 HashResponse = new ApiResponse<string> { IsSuccess = false, ErrorCode = AppErrorCode.NotFound }
             };
             var logic = new AuthLogic(repo, new PasswordVerifier());
 
-            var res = await logic.RegisterUser(new RegisterUserDto { Username = "john", UserPassword = "password123", Role = "User" });
+            var res = await logic.RegisterUser(new RegisterUserDto { Username = "john", UserPassword = "password123" });
             Assert.IsTrue(res.IsSuccess);
             Assert.AreEqual(7, res.Data!.Id);
             Assert.AreEqual("john", res.Data!.Username);

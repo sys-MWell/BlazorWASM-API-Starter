@@ -13,7 +13,7 @@ namespace Blueprint.API.Repository.UserRepository
         /// </summary>
         /// <param name="username">The username of the user to retrieve.</param>
         /// <returns>An <see cref="ApiResponse{T}"/> containing user details if found.</returns>
-        Task<ApiResponse<IEnumerable<UserDetailDto>>> GetUserByUsername(string username);
+        Task<ApiResponse<UserDetailDto>> GetUserByUsername(string username);
 
 
         /// <summary>
