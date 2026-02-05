@@ -6,9 +6,13 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Blueprint.API.Logic.UserLogic
 {
-    public class UserLogic(IAuthRepository userRepository) : IUserLogic
+    /// <summary>
+    /// Implements authentication logic including registration, login, and user retrieval.
+    /// </summary>
+    public class AuthLogic(IAuthRepository userRepository, IPasswordVerifier passwordVerifier) : IAuthLogic
     {
         private readonly IAuthRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        private readonly IPasswordVerifier _passwordVerifier = passwordVerifier ?? throw new ArgumentNullException(nameof(passwordVerifier));
 
         /// <summary>
         /// Retrieves user details by username.
@@ -21,10 +25,7 @@ namespace Blueprint.API.Logic.UserLogic
         {
             var repositoryResponse = await _userRepository.GetUserByUsername(username);
 
-            // Map AuthDetailsDto -> UserDetailDto
-            var mapped = (repositoryResponse.Data ?? Array.Empty<AuthDetailsDto>())
-                .Select(a => new UserDetailDto { Id = a.UserId, Username = a.Username, Role = a.Role })
-                .ToList();
+            var mapped = repositoryResponse.Data ?? Array.Empty<UserDetailDto>();
 
             return ApiResponseLogicHelper.HandleRepositoryResponse(
                 new ApiResponse<IEnumerable<UserDetailDto>>
@@ -55,29 +56,21 @@ namespace Blueprint.API.Logic.UserLogic
                 return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Username does not exist", AppErrorCode.UserNotFound);
             }
 
-            // Validate user credentials
-            var user = await _userRepository.LoginUser(userLogin.Username);
+            var hashResponse = await _userRepository.GetPasswordHashByUsername(userLogin.Username);
+            if (!hashResponse.IsSuccess || string.IsNullOrWhiteSpace(hashResponse.Data))
+            {
+                return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Invalid credentials", AppErrorCode.Unauthorized);
+            }
 
-            if (user.IsSuccess == false)
+            var verified = _passwordVerifier.Verify(userLogin.Username, hashResponse.Data!, userLogin.UserPassword);
+            if (!verified)
             {
-                return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Invalid password", AppErrorCode.Unauthorized);
+                return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Invalid password", AppErrorCode.PasswordInvalid);
             }
-            else if (user.IsSuccess)
-            {
-                // Since passwords are hashed, use PasswordHasher to verify
-                var passwordHasher = new PasswordHasher<string>();
-                var hashedPassword = user.Data?.UserPassword;
-                if (string.IsNullOrEmpty(hashedPassword))
-                {
-                    return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("User password not found", AppErrorCode.ServerError);
-                }
-                var verificationResult = passwordHasher.VerifyHashedPassword(userLogin.Username, hashedPassword, userLogin.UserPassword);
-                if (verificationResult == PasswordVerificationResult.Failed)
-                {
-                    return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Invalid password", AppErrorCode.PasswordInvalid);
-                }
-            }
-            else
+
+            // Fetch user details for successful login
+            var user = await _userRepository.GetUserByUsername(userLogin.Username);
+            if (!user.IsSuccess || user.Data is null)
             {
                 return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("User details returned with faults", AppErrorCode.ServerError);
             }
@@ -86,9 +79,9 @@ namespace Blueprint.API.Logic.UserLogic
             {
                 new UserDetailDto
                 {
-                    Id = user.Data!.UserId,
-                    Username = user.Data.Username,
-                    Role = user.Data.Role
+                    Id = user.Data!.First().Id,
+                    Username = user.Data.First().Username,
+                    Role = user.Data.First().Role
                 }
             };
 
@@ -121,13 +114,12 @@ namespace Blueprint.API.Logic.UserLogic
                 return new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorMessage = "User already exists", ErrorCode = AppErrorCode.UserAlreadyExists };
             }
 
-            // Hash the password
-            var passwordHasher = new PasswordHasher<string>();
+            // Hash the password using the password verifier
             var user = new RegisterUserDto
             {
                 Username = userRegister.Username,
                 Role = userRegister.Role ?? "User",
-                UserPassword = passwordHasher.HashPassword(userRegister.Username, userRegister.UserPassword)
+                UserPassword = _passwordVerifier.Hash(userRegister.Username, userRegister.UserPassword)
             };
 
             // Repo call to create user
@@ -142,20 +134,11 @@ namespace Blueprint.API.Logic.UserLogic
             }
             else if (repositoryResponse.IsSuccess)
             {
-                var successData = repositoryResponse.Data is null
-                    ? null
-                    : new UserDetailDto
-                    {
-                        Id = repositoryResponse.Data.UserId,
-                        Username = repositoryResponse.Data.Username,
-                        Role = repositoryResponse.Data.Role
-                    };
-
-                // Manually construct the response with mapped type
+                // Repository already returns UserDetailDto
                 return new ApiResponse<UserDetailDto>
                 {
                     IsSuccess = true,
-                    Data = successData!,
+                    Data = repositoryResponse.Data!,
                     ErrorCode = AppErrorCode.None
                 };
             }

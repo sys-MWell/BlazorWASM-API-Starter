@@ -16,7 +16,7 @@ namespace Blueprint.API.Helpers
         /// <param name="response">The response to convert.</param>
         /// <param name="controller">The controller to produce action results.</param>
         /// <returns>An <see cref="IActionResult"/> representing the response.</returns>
-        public static IActionResult ToActionResult<T>(this ApiResponse<T> response, ControllerBase controller)
+        public static ActionResult ToActionResult<T>(this ApiResponse<T> response, ControllerBase controller)
         {
             if (response.IsSuccess)
             {
