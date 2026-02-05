@@ -27,7 +27,7 @@ namespace Blueprint.API.Repository.UserRepository
             p.Add("@ErrorCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             // Call a dedicated sproc that returns the stored password hash for the given username
-            var loginRow = (await ExecuteQuery<LoginUserDto>("dbo.usp_GetPasswordHashByUsername", CommandType.StoredProcedure, p)).FirstOrDefault();
+            var loginRow = (await ExecuteQuery<User>("dbo.usp_GetPasswordHashByUsername", CommandType.StoredProcedure, p)).FirstOrDefault();
             var hash = loginRow?.UserPassword;
 
             string responseMessage = p.Get<string>("@ResponseMessage");
@@ -48,9 +48,9 @@ namespace Blueprint.API.Repository.UserRepository
             userParameters.Add("@ResponseMessage", dbType: DbType.String, size: 255, direction: ParameterDirection.Output);
             userParameters.Add("@ErrorCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            var dbUsers = await ExecuteQuery<UserDetailDto>("dbo.usp_GetUserSummaryByUsername", CommandType.StoredProcedure, userParameters);
-            var mapped = (dbUsers ?? Array.Empty<UserDetailDto>())
-                .Select(u => new UserDetailDto { Id = u.Id, Username = u.Username, Role = u.Role })
+            var dbUsers = await ExecuteQuery<User>("dbo.usp_GetUserSummaryByUsername", CommandType.StoredProcedure, userParameters);
+            var mapped = (dbUsers ?? Array.Empty<User>())
+                .Select(u => new UserDetailDto { Id = u.UserId, Username = u.Username, Role = u.Role })
                 .ToList();
 
             string responseMessage = userParameters.Get<string>("@ResponseMessage");
@@ -65,19 +65,19 @@ namespace Blueprint.API.Repository.UserRepository
         /// </summary>
         /// <param name="userRegister">The registration data.</param>
         /// <returns>An <see cref="ApiResponse{UserDetailDto}"/> with created user details.</returns>
-        public async Task<ApiResponse<UserDetailDto>> RegisterUser(RegisterUserDto userRegister)
+        public async Task<ApiResponse<UserDetailDto>> RegisterUser(User user)
         {
             DynamicParameters userRegisterParameters = new();
-            userRegisterParameters.Add("@Username", userRegister.Username, dbType: DbType.String, size: 100);
-            userRegisterParameters.Add("@UserPassword", userRegister.UserPassword, dbType: DbType.String, size: 255);
-            userRegisterParameters.Add("@Role", userRegister.Role, dbType: DbType.String, size: 10);
+            userRegisterParameters.Add("@Username", user.Username, dbType: DbType.String, size: 100);
+            userRegisterParameters.Add("@UserPassword", user.UserPassword, dbType: DbType.String, size: 255);
+            userRegisterParameters.Add("@Role", user.Role, dbType: DbType.String, size: 10);
             userRegisterParameters.Add("@ResponseMessage", dbType: DbType.String, size: 255, direction: ParameterDirection.Output);
             userRegisterParameters.Add("@ErrorCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            var dbUser = (await ExecuteQuery<UserDetailDto>("dbo.usp_RegisterUser", CommandType.StoredProcedure, userRegisterParameters)).FirstOrDefault();
+            var dbUser = (await ExecuteQuery<User>("dbo.usp_RegisterUser", CommandType.StoredProcedure, userRegisterParameters)).FirstOrDefault();
             var mapped = dbUser is null
                 ? null
-                : new UserDetailDto { Id = dbUser.Id, Username = dbUser.Username, Role = dbUser.Role };
+                : new UserDetailDto { Id = dbUser.UserId, Username = dbUser.Username, Role = dbUser.Role };
 
             string responseMessage = userRegisterParameters.Get<string>("@ResponseMessage");
             int returnCode = userRegisterParameters.Get<int>("@ErrorCode");
