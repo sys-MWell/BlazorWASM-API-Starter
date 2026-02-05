@@ -2,7 +2,6 @@
 using Blueprint.API.Repository.UserRepository;
 using Template.Models.Dtos;
 using Template.Models.Models;
-using Microsoft.AspNetCore.Identity;
 
 namespace Blueprint.API.Logic.UserLogic
 {
@@ -68,9 +67,7 @@ namespace Blueprint.API.Logic.UserLogic
                 return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("Invalid password", AppErrorCode.PasswordInvalid);
             }
 
-            // Fetch user details for successful login
-            var user = await _userRepository.GetUserByUsername(userLogin.Username);
-            if (!user.IsSuccess || user.Data is null)
+            if (!existingUser.IsSuccess || existingUser.Data is null)
             {
                 return ApiResponseLogicHelper.CreateErrorResponse<IEnumerable<UserDetailDto>>("User details returned with faults", AppErrorCode.ServerError);
             }
@@ -79,9 +76,9 @@ namespace Blueprint.API.Logic.UserLogic
             {
                 new UserDetailDto
                 {
-                    Id = user.Data!.First().Id,
-                    Username = user.Data.First().Username,
-                    Role = user.Data.First().Role
+                    Id = existingUser.Data!.First().Id,
+                    Username = existingUser.Data.First().Username,
+                    Role = existingUser.Data.First().Role
                 }
             };
 
@@ -114,16 +111,17 @@ namespace Blueprint.API.Logic.UserLogic
                 return new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorMessage = "User already exists", ErrorCode = AppErrorCode.UserAlreadyExists };
             }
 
-            // Hash the password using the password verifier
-            var user = new RegisterUserDto
+            // Hash the password and prepare repository DTO
+            var hashedPassword = _passwordVerifier.Hash(userRegister.Username, userRegister.UserPassword);
+            var domainUser = new User
             {
                 Username = userRegister.Username,
                 Role = userRegister.Role ?? "User",
-                UserPassword = _passwordVerifier.Hash(userRegister.Username, userRegister.UserPassword)
+                UserPassword = hashedPassword
             };
 
             // Repo call to create user
-            var repositoryResponse = await _userRepository.RegisterUser(user);
+            var repositoryResponse = await _userRepository.RegisterUser(domainUser);
 
             if (repositoryResponse.IsSuccess == false)
             {

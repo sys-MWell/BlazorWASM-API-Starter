@@ -19,13 +19,11 @@ namespace Blueprint.API.Test.Logic
         private sealed class StubRepo : IAuthRepository
         {
             public ApiResponse<IEnumerable<UserDetailDto>>? GetByUsernameResponse { get; set; }
-            public ApiResponse<UserDetailDto>? LoginResponse { get; set; }
             public ApiResponse<UserDetailDto>? RegisterResponse { get; set; }
             public ApiResponse<string>? HashResponse { get; set; }
 
             public Task<ApiResponse<IEnumerable<UserDetailDto>>> GetUserByUsername(string username) => Task.FromResult(GetByUsernameResponse!);
-            public Task<ApiResponse<UserDetailDto>> LoginUser(LoginUserDto userLogin) => Task.FromResult(LoginResponse!);
-            public Task<ApiResponse<UserDetailDto>> RegisterUser(RegisterUserDto userRegister) => Task.FromResult(RegisterResponse!);
+            public Task<ApiResponse<UserDetailDto>> RegisterUser(User user) => Task.FromResult(RegisterResponse!);
             public Task<ApiResponse<string>> GetPasswordHashByUsername(string username) => Task.FromResult(HashResponse!);
         }
 
@@ -62,7 +60,6 @@ namespace Blueprint.API.Test.Logic
             var repo = new StubRepo
             {
                 GetByUsernameResponse = new ApiResponse<IEnumerable<UserDetailDto>> { IsSuccess = false, ErrorCode = AppErrorCode.UserNotFound },
-                LoginResponse = new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorCode = AppErrorCode.Unauthorized },
                 HashResponse = new ApiResponse<string> { IsSuccess = false, ErrorCode = AppErrorCode.UserNotFound }
             };
             var logic = new AuthLogic(repo, new PasswordVerifier());

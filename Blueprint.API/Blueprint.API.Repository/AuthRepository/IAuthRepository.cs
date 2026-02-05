@@ -17,11 +17,11 @@ namespace Blueprint.API.Repository.UserRepository
 
 
         /// <summary>
-        /// Registers a new user with the provided registration details.
+        /// Registers a new user using the domain entity.
         /// </summary>
-        /// <param name="userRegister">The registration details of the new user.</param>
+        /// <param name="user">The domain user to register (contains hashed password).</param>
         /// <returns>An <see cref="ApiResponse{UserDetailDto}"/> containing user details if registration is successful.</returns>
-        Task<ApiResponse<UserDetailDto>> RegisterUser(RegisterUserDto userRegister);
+        Task<ApiResponse<UserDetailDto>> RegisterUser(User user);
 
         /// <summary>
         /// Retrieves the stored password hash for a given username.
