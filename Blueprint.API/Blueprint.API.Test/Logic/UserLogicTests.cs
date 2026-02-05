@@ -120,7 +120,7 @@ namespace Blueprint.API.Test.Logic
             };
             var logic = new AuthLogic(repo, new PasswordVerifier());
 
-            var res = await logic.RegisterUser(new RegisterUserDto { Username = "john", UserPassword = "password123", Role = "User" });
+            var res = await logic.RegisterUser(new RegisterUserDto { Username = "john", UserPassword = "password123" });
             Assert.IsTrue(res.IsSuccess);
             Assert.AreEqual(7, res.Data!.Id);
             Assert.AreEqual("john", res.Data!.Username);

@@ -29,12 +29,29 @@ namespace Blueprint.API.Repository.Shared
         /// <param name="commandType">Command type.</param>
         /// <param name="parameters">Optional parameters.</param>
         /// <returns>A sequence of <typeparamref name="T"/>.</returns>
-        protected async Task<IEnumerable<T>> ExecuteQuery<T>(string sqlCommand, CommandType commandType, DynamicParameters? parameters = null)
+        protected async Task<IEnumerable<T>> ExecuteQueryList<T>(string sqlCommand, CommandType commandType, DynamicParameters? parameters = null)
         {
             using (var connection = new SqlConnection(_databaseSettings.AppDbConnectionString))
             {
                 await connection.OpenAsync();
                 return await connection.QueryAsync<T>(sqlCommand, parameters, commandType: commandType);
+            }
+        }
+
+        /// <summary>
+        /// Executes a query and maps the results to the specified type.
+        /// </summary>
+        /// <typeparam name="T">Result type.</typeparam>
+        /// <param name="sqlCommand">The SQL or stored procedure name.</param>
+        /// <param name="commandType">Command type.</param>
+        /// <param name="parameters">Optional parameters.</param>
+        /// <returns>The first result of <typeparamref name="T"/> or default.</returns>
+        protected async Task<T?> ExecuteQuery<T>(string sqlCommand, CommandType commandType, DynamicParameters? parameters = null)
+        {
+            using (var connection = new SqlConnection(_databaseSettings.AppDbConnectionString))
+            {
+                await connection.OpenAsync();
+                return await connection.QueryFirstOrDefaultAsync<T>(sqlCommand, parameters, commandType: commandType);
             }
         }
 

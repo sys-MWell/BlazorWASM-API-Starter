@@ -41,7 +41,7 @@ namespace Blueprint.API.Test.Controllers
                 => Task.FromResult(LoginUserResponse ?? new ApiResponse<IEnumerable<UserDetailDto>> { IsSuccess = true, Data = Enumerable.Empty<UserDetailDto>() });
 
             public Task<ApiResponse<UserDetailDto>> RegisterUser(RegisterUserDto userRegister)
-                => Task.FromResult(RegisterUserResponse ?? new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = userRegister.Username, Role = userRegister.Role } });
+                => Task.FromResult(RegisterUserResponse ?? new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = userRegister.Username} });
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Blueprint.API.Test.Controllers
             };
             var controller = new AuthController(logger, logic, BuildConfig());
 
-            var result = await controller.RegisterUser(new RegisterUserDto { Username = "bob", UserPassword = "password123", Role = "Admin" });
+            var result = await controller.RegisterUser(new RegisterUserDto { Username = "bob", UserPassword = "password123" });
 
             var ok = result.Result as OkObjectResult;
             Assert.IsNotNull(ok);
