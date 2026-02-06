@@ -59,6 +59,9 @@ namespace Blueprint.API.Test.Controllers
             return new ConfigurationBuilder().AddInMemoryCollection(dict!).Build();
         }
 
+        /// <summary>
+        /// Verifies that the RegisterUser endpoint returns a 200 OK result with a token and user payload on successful registration.
+        /// </summary>
         [TestMethod]
         public async Task RegisterUser_ReturnsOk_WithTokenAndUser()
         {
@@ -85,6 +88,9 @@ namespace Blueprint.API.Test.Controllers
             Assert.AreEqual("stub-token", payload!.Token);
         }
 
+        /// <summary>
+        /// Verifies that the RegisterUser endpoint correctly maps a logic-layer error to the corresponding HTTP status code.
+        /// </summary>
         [TestMethod]
         public async Task RegisterUser_MapsError_FromLogic()
         {
@@ -107,6 +113,9 @@ namespace Blueprint.API.Test.Controllers
             Assert.AreEqual(409, conflict!.StatusCode);
         }
 
+        /// <summary>
+        /// Verifies that the Login endpoint returns a 200 OK result with a token and user payload on successful login.
+        /// </summary>
         [TestMethod]
         public async Task Login_ReturnsOk_WithTokenAndUser()
         {
@@ -132,6 +141,9 @@ namespace Blueprint.API.Test.Controllers
             Assert.AreEqual("stub-token", payload!.Token);
         }
 
+        /// <summary>
+        /// Verifies that the Login endpoint correctly maps a logic-layer error to the corresponding HTTP status code.
+        /// </summary>
         [TestMethod]
         public async Task Login_MapsError_FromLogic()
         {
