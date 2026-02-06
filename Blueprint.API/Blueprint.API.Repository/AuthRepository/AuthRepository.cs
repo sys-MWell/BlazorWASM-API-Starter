@@ -61,7 +61,7 @@ namespace Blueprint.API.Repository.UserRepository
         /// <summary>
         /// Registers a new user.
         /// </summary>
-        /// <param name="userRegister">The registration data.</param>
+        /// <param name="user">The domain user to register (contains hashed password).</param>
         /// <returns>An <see cref="ApiResponse{UserDetailDto}"/> with created user details.</returns>
         public async Task<ApiResponse<UserDetailDto>> RegisterUser(User user)
         {

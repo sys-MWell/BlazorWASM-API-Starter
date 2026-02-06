@@ -25,7 +25,7 @@ namespace Blueprint.API.Controllers
         /// </summary>
         /// <param name="logger">The logger instance.</param>
         /// <param name="userLogic">User logic service.</param>
-        /// <param name="token"></param>
+        /// <param name="token">The token provider for generating JWT tokens.</param>
         public AuthController(ILogger<AuthController> logger, IAuthLogic userLogic, ITokenProvider token)
         {
             _logger = logger;
