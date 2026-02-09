@@ -1,5 +1,6 @@
 ﻿using Blueprint.API.Logic.Helpers;
-using Blueprint.API.Repository.UserRepository;
+using Blueprint.API.Repository.AuthRepository.Commands;
+using Blueprint.API.Repository.AuthRepository.Queries;
 using Template.Models.Dtos;
 using Template.Models.Models;
 
@@ -7,10 +8,15 @@ namespace Blueprint.API.Logic.UserLogic
 {
     /// <summary>
     /// Implements authentication logic including registration, login, and user retrieval.
+    /// Uses CQRS pattern with separate query and command repositories.
     /// </summary>
-    public class AuthLogic(IAuthRepository userRepository, IPasswordVerifier passwordVerifier) : IAuthLogic
+    public class AuthLogic(
+        IAuthQueryRepository queryRepository,
+        IAuthCommandRepository commandRepository,
+        IPasswordVerifier passwordVerifier) : IAuthLogic
     {
-        private readonly IAuthRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        private readonly IAuthQueryRepository _queryRepository = queryRepository ?? throw new ArgumentNullException(nameof(queryRepository));
+        private readonly IAuthCommandRepository _commandRepository = commandRepository ?? throw new ArgumentNullException(nameof(commandRepository));
         private readonly IPasswordVerifier _passwordVerifier = passwordVerifier ?? throw new ArgumentNullException(nameof(passwordVerifier));
 
         /// <summary>
@@ -22,9 +28,8 @@ namespace Blueprint.API.Logic.UserLogic
         /// </returns>
         public async Task<ApiResponse<UserDetailDto>> GetUserByUsername(string username)
         {
-            var repositoryResponse = await _userRepository.GetUserByUsername(username);
+            var repositoryResponse = await _queryRepository.GetUserByUsername(username);
 
-            // Fix: Use object initializer with required Id property set to 0 (or another default value)
             var mapped = repositoryResponse.Data ?? new UserDetailDto { Id = 0, Username = string.Empty, Role = null };
 
             return ApiResponseLogicHelper.HandleRepositoryResponse(
@@ -48,7 +53,6 @@ namespace Blueprint.API.Logic.UserLogic
         /// </returns>
         public async Task<ApiResponse<UserDetailDto>> LoginUser(LoginUserDto userLogin)
         {
-            // Check if user exists
             var existingUser = await GetUserByUsername(userLogin.Username);
 
             if (existingUser.IsSuccess == false)
@@ -56,7 +60,7 @@ namespace Blueprint.API.Logic.UserLogic
                 return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("Username does not exist", AppErrorCode.UserNotFound);
             }
 
-            var hashResponse = await _userRepository.GetPasswordHashByUsername(userLogin.Username);
+            var hashResponse = await _queryRepository.GetPasswordHashByUsername(userLogin.Username);
             if (!hashResponse.IsSuccess || string.IsNullOrWhiteSpace(hashResponse.Data))
             {
                 return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("Invalid credentials", AppErrorCode.Unauthorized);
@@ -80,7 +84,6 @@ namespace Blueprint.API.Logic.UserLogic
                 Role = existingUser.Data.Role
             };
 
-            // Reuse existingUser's status to craft final response
             return ApiResponseLogicHelper.HandleRepositoryResponse(existingUser, successData);
         }
 
@@ -93,15 +96,12 @@ namespace Blueprint.API.Logic.UserLogic
         /// </returns>
         public async Task<ApiResponse<UserDetailDto>> RegisterUser(RegisterUserDto userRegister)
         {
-            // Username checks
             if (string.IsNullOrWhiteSpace(userRegister.Username) || userRegister.Username.Length < 3)
                 return new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorMessage = "Invalid username", ErrorCode = AppErrorCode.Validation };
 
-            // Password checks (example: min 8 chars, at least one number)
             if (string.IsNullOrWhiteSpace(userRegister.UserPassword) || userRegister.UserPassword.Length < 8)
                 return new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorMessage = "Password too weak", ErrorCode = AppErrorCode.Validation };
 
-            // Check if user exists
             var existingUser = await GetUserByUsername(userRegister.Username);
 
             if (existingUser.IsSuccess)
@@ -109,7 +109,6 @@ namespace Blueprint.API.Logic.UserLogic
                 return new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorMessage = "User already exists", ErrorCode = AppErrorCode.UserAlreadyExists };
             }
 
-            // Hash the password and prepare repository DTO
             var hashedPassword = _passwordVerifier.Hash(userRegister.Username, userRegister.UserPassword);
             var domainUser = new User
             {
@@ -118,8 +117,7 @@ namespace Blueprint.API.Logic.UserLogic
                 UserPassword = hashedPassword
             };
 
-            // Repo call to create user
-            var repositoryResponse = await _userRepository.RegisterUser(domainUser);
+            var repositoryResponse = await _commandRepository.RegisterUser(domainUser);
 
             if (repositoryResponse.IsSuccess == false)
             {
@@ -130,7 +128,6 @@ namespace Blueprint.API.Logic.UserLogic
             }
             else if (repositoryResponse.IsSuccess)
             {
-                // Repository already returns UserDetailDto
                 return new ApiResponse<UserDetailDto>
                 {
                     IsSuccess = true,

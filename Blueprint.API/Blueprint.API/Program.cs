@@ -1,6 +1,7 @@
 using Blueprint.API.Logic.UserLogic;
 using Blueprint.API.Logic.Helpers;
-using Blueprint.API.Repository.UserRepository;
+using Blueprint.API.Repository.AuthRepository.Commands;
+using Blueprint.API.Repository.AuthRepository.Queries;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
@@ -52,13 +53,14 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "ready" });
 
-// Auth DI
+// Auth DI - CQRS pattern: separate query and command repositories
 var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection") ?? throw new InvalidOperationException("Connection string 'DatabaseConnection' not found.");
 builder.Services.AddSingleton(new DatabaseSettings
 {
     AppDbConnectionString = connectionString
 });
-builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IAuthQueryRepository, AuthQueryRepository>();
+builder.Services.AddScoped<IAuthCommandRepository, AuthCommandRepository>();
 builder.Services.AddScoped<IAuthLogic, AuthLogic>();
 builder.Services.AddSingleton<IPasswordVerifier, PasswordVerifier>();
 builder.Services.AddSingleton<ITokenProvider, TokenProvider>();
