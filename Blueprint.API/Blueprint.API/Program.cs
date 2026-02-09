@@ -1,18 +1,14 @@
-using Blueprint.API.Logic.UserLogic;
+using Blueprint.API.Configuration;
 using Blueprint.API.Logic.Helpers;
+using Blueprint.API.Logic.UserLogic;
 using Blueprint.API.Repository.AuthRepository.Commands;
 using Blueprint.API.Repository.AuthRepository.Queries;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using Serilog;
-using System.Text;
-using Blueprint.API.Models.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File(path: $"Logs\\{DateTime.Now:yyyy-MM-dd}\\log-.txt", rollingInterval: RollingInterval.Day)
@@ -20,85 +16,23 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+// Add services
 builder.Services.AddControllers();
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
-});
-
+builder.Services.AddSwaggerWithJwtAuth();
 builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "ready" });
+builder.Services.AddDatabaseServices(builder.Configuration);
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
-// Auth DI - CQRS pattern: separate query and command repositories
-var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection") ?? throw new InvalidOperationException("Connection string 'DatabaseConnection' not found.");
-builder.Services.AddSingleton(new DatabaseSettings
-{
-    AppDbConnectionString = connectionString
-});
 builder.Services.AddScoped<IAuthQueryRepository, AuthQueryRepository>();
 builder.Services.AddScoped<IAuthCommandRepository, AuthCommandRepository>();
 builder.Services.AddScoped<IAuthLogic, AuthLogic>();
 builder.Services.AddSingleton<IPasswordVerifier, PasswordVerifier>();
 builder.Services.AddSingleton<ITokenProvider, TokenProvider>();
 
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var issuer = jwtSettings["Issuer"] ?? string.Empty;
-var audience = jwtSettings["Audience"] ?? string.Empty;
-var key = jwtSettings["Key"] ?? string.Empty;
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-    };
-});
-
-builder.Services.AddAuthorization();
-
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1"));
-}
-
+// Configure middleware pipeline
+app.UseSwaggerInDevelopment();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
