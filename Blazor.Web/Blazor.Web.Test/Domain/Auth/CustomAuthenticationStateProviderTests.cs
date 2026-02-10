@@ -1,5 +1,6 @@
 using Blazor.Web.Domain.Auth;
 using Blazor.Web.Test.Utils;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Claims;
 
 namespace Blazor.Web.Test.Domain.Auth
@@ -16,7 +17,7 @@ namespace Blazor.Web.Test.Domain.Auth
         [TestMethod]
         public async Task GetAuthenticationStateAsync_NoToken_ReturnsAnonymous()
         {
-            var provider = new CustomAuthenticationStateProvider(new InMemoryTokenStore(), new TestTokenPersistence(), new TestUserSession());
+            var provider = new CustomAuthenticationStateProvider(new InMemoryTokenStore(), new TestTokenPersistence(), new TestUserSession(), NullLogger<CustomAuthenticationStateProvider>.Instance);
             var state = await provider.GetAuthenticationStateAsync();
             Assert.AreEqual(false, state.User.Identity?.IsAuthenticated);
         }
@@ -30,7 +31,7 @@ namespace Blazor.Web.Test.Domain.Auth
             var tokenStore = new InMemoryTokenStore();
             var persistence = new TestTokenPersistence();
             var session = new TestUserSession();
-            var provider = new CustomAuthenticationStateProvider(tokenStore, persistence, session);
+            var provider = new CustomAuthenticationStateProvider(tokenStore, persistence, session, NullLogger<CustomAuthenticationStateProvider>.Instance);
 
             var jwt = Blazor.Web.Test.Utils.JwtTestHelper.CreateJwt(7, username: "bob", role: "Admin");
             await provider.MarkUserAsAuthenticatedAsync(jwt);
@@ -53,7 +54,7 @@ namespace Blazor.Web.Test.Domain.Auth
             var tokenStore = new InMemoryTokenStore();
             var persistence = new TestTokenPersistence();
             var session = new TestUserSession();
-            var provider = new CustomAuthenticationStateProvider(tokenStore, persistence, session);
+            var provider = new CustomAuthenticationStateProvider(tokenStore, persistence, session, NullLogger<CustomAuthenticationStateProvider>.Instance);
 
             await provider.MarkUserAsLoggedOutAsync();
             var state = await provider.GetAuthenticationStateAsync();
@@ -70,7 +71,7 @@ namespace Blazor.Web.Test.Domain.Auth
             var tokenStore = new InMemoryTokenStore();
             var persistence = new TestTokenPersistence();
             var session = new TestUserSession();
-            var provider = new CustomAuthenticationStateProvider(tokenStore, persistence, session);
+            var provider = new CustomAuthenticationStateProvider(tokenStore, persistence, session, NullLogger<CustomAuthenticationStateProvider>.Instance);
 
             var jwt = Blazor.Web.Test.Utils.JwtTestHelper.CreateJwt(11, username: "eve");
             await persistence.SaveTokenAsync(jwt);
