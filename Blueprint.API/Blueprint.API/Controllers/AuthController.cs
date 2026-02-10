@@ -41,15 +41,24 @@ namespace Blueprint.API.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponseDto>> RegisterUser([FromBody] RegisterUserDto userDetails)
         {
+            _logger.LogInformation("Registration attempt for username: {Username}", userDetails.Username);
+
             var result = await _userLogic.RegisterUser(userDetails);
 
             if (!result.IsSuccess)
+            {
+                _logger.LogWarning("Registration failed for username: {Username}. Reason: {ErrorMessage}", userDetails.Username, result.ErrorMessage);
                 return result.ToActionResult(this);
+            }
 
             var user = result.Data;
             if (user == null)
+            {
+                _logger.LogError("Registration succeeded but user details missing for username: {Username}", userDetails.Username);
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = "User details missing." });
+            }
 
+            _logger.LogInformation("Registration successful for username: {Username}, UserId: {UserId}", user.Username, user.Id);
             return Ok(_tokenProvider.GenerateAuthResponse(user));
         }
 
@@ -61,15 +70,24 @@ namespace Blueprint.API.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginUserDto dto)
         {
+            _logger.LogInformation("Login attempt for username: {Username}", dto.Username);
+
             var userDetails = await _userLogic.LoginUser(dto);
 
             if (!userDetails.IsSuccess)
+            {
+                _logger.LogWarning("Login failed for username: {Username}. Reason: {ErrorMessage}", dto.Username, userDetails.ErrorMessage);
                 return userDetails.ToActionResult(this);
+            }
 
             var user = userDetails.Data;
             if (user == null)
+            {
+                _logger.LogError("Login succeeded but user details missing for username: {Username}", dto.Username);
                 return StatusCode(StatusCodes.Status500InternalServerError, new { message = "User details missing." });
+            }
 
+            _logger.LogInformation("Login successful for username: {Username}, UserId: {UserId}", user.Username, user.Id);
             return Ok(_tokenProvider.GenerateAuthResponse(user));
         }
     }
