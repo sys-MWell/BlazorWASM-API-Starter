@@ -3,6 +3,9 @@ using Template.Models.Models;
 
 namespace Blazor.Web.Repository.User
 {
+    /// <summary>
+    /// Defines the contract for user repository operations including authentication and registration.
+    /// </summary>
     public interface IUserRepository
     {
         /// <summary>

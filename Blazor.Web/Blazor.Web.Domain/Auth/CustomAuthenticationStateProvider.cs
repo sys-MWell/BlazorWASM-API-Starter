@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Logging;
 using Template.Models.Dtos;
 
 namespace Blazor.Web.Domain.Auth
@@ -9,11 +10,12 @@ namespace Blazor.Web.Domain.Auth
     /// Authentication state provider backed by a JWT whose NameIdentifier is the User Id.
     /// Identity.Name resolves to the User Id (not the username)
     /// </summary>
-    public class CustomAuthenticationStateProvider(ITokenStore tokenStore, ITokenPersistence persistence, IUserSession userSession) : AuthenticationStateProvider
+    public class CustomAuthenticationStateProvider(ITokenStore tokenStore, ITokenPersistence persistence, IUserSession userSession, ILogger<CustomAuthenticationStateProvider> logger) : AuthenticationStateProvider
     {
         private readonly ITokenStore _tokenStore = tokenStore;
         private readonly ITokenPersistence _persistence = persistence;
         private readonly IUserSession _userSession = userSession;
+        private readonly ILogger<CustomAuthenticationStateProvider> _logger = logger;
         private ClaimsPrincipal _cachedPrincipal = new(new ClaimsIdentity());
         private bool _restored;
 
@@ -62,13 +64,19 @@ namespace Blazor.Web.Domain.Auth
         {
             if (_restored) return;
             _restored = true;
+            _logger.LogDebug("Attempting to restore authentication state from persistence");
             var persisted = await _persistence.GetTokenAsync();
             if (!string.IsNullOrWhiteSpace(persisted))
             {
                 await _persistence.SaveTokenAsync(persisted);
                     _tokenStore.SetToken(persisted);
                 _cachedPrincipal = BuildPrincipal(persisted);
+                _logger.LogInformation("Authentication state restored from persistence for user: {UserId}", CurrentUser?.Id);
                 NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
+            }
+            else
+            {
+                _logger.LogDebug("No persisted token found");
             }
         }
 
@@ -83,6 +91,7 @@ namespace Blazor.Web.Domain.Auth
             _tokenStore.SetToken(token);
             await _persistence.SaveTokenAsync(token);
             _cachedPrincipal = BuildPrincipal(token);
+            _logger.LogInformation("User authenticated: {UserId}", CurrentUser?.Id);
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
         }
 
@@ -93,11 +102,13 @@ namespace Blazor.Web.Domain.Auth
         /// <returns>A task representing the asynchronous logout operation.</returns>
         public async Task MarkUserAsLoggedOutAsync()
         {
+            var userId = CurrentUser?.Id;
             await _persistence.ClearTokenAsync();
             _tokenStore.ClearToken();
             _cachedPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
             CurrentUser = null;
             _userSession.Clear();
+            _logger.LogInformation("User logged out: {UserId}", userId);
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
         }
 
@@ -122,16 +133,17 @@ namespace Blazor.Web.Domain.Auth
                 }
 
                 var username = principal.FindFirst(ClaimTypes.Name)?.Value
-                               ?? principal.FindFirst("username")?.Value
-                               ?? principal.FindFirst("unique_name")?.Value
-                               ?? id.ToString();
+                                ?? principal.FindFirst("username")?.Value
+                                ?? principal.FindFirst("unique_name")?.Value
+                                ?? id.ToString();
                 var role = principal.FindFirst(ClaimTypes.Role)?.Value;
                 CurrentUser = new UserDetailDto { Id = id, Username = username, Role = role };
                 _userSession.SetUser(CurrentUser);
                 return principal;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogWarning(ex, "Failed to parse JWT token");
                 CurrentUser = null;
                 _userSession.Clear();
                 return new ClaimsPrincipal(new ClaimsIdentity());

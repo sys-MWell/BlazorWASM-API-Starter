@@ -2,6 +2,7 @@ using Blazor.Web.Logic.User;
 using Blazor.Web.Domain.Validation;
 using Blazor.Web.Domain.Auth;
 using Blazor.Web.Repository.User;
+using Microsoft.Extensions.Logging.Abstractions;
 using Template.Models.Dtos;
 using Template.Models.Models;
 
@@ -46,7 +47,7 @@ namespace Blazor.Web.Test.Logic.User
             var dto = new AuthResponseDto { Token = "t", User = new UserDetailDto { Id = 1, Username = "u" } };
             var repo = new RepoStub(new ApiResponse<AuthResponseDto> { IsSuccess = true, Data = dto, ErrorCode = AppErrorCode.None });
             var tokenStore = new InMemoryTokenStore();
-            var logic = new UserLogic(repo, tokenStore, new LogicValidator(), new SessionStub());
+            var logic = new UserLogic(repo, tokenStore, new LogicValidator(), new SessionStub(), NullLogger<UserLogic>.Instance);
 
             var result = await logic.UserLoginAsync(new LoginUserDto { Username = "u", UserPassword = "p" });
             Assert.IsTrue(result.IsSuccess);
@@ -62,7 +63,7 @@ namespace Blazor.Web.Test.Logic.User
         {
             var dto = new AuthResponseDto { Token = "", User = new UserDetailDto { Id = 1, Username = "u" } };
             var repo = new RepoStub(new ApiResponse<AuthResponseDto> { IsSuccess = true, Data = dto });
-            var logic = new UserLogic(repo, new InMemoryTokenStore(), new LogicValidator(), new SessionStub());
+            var logic = new UserLogic(repo, new InMemoryTokenStore(), new LogicValidator(), new SessionStub(), NullLogger<UserLogic>.Instance);
 
             var result = await logic.UserLoginAsync(new LoginUserDto());
             Assert.IsFalse(result.IsSuccess);
@@ -77,7 +78,7 @@ namespace Blazor.Web.Test.Logic.User
         {
             var dto = new AuthResponseDto { Token = "t", User = new UserDetailDto { Id = 1, Username = "u" } };
             var repo = new RepoStub(new ApiResponse<AuthResponseDto> { IsSuccess = true, Data = dto });
-            var logic = new UserLogic(repo, new ExpiringTokenStore(), new LogicValidator(), new SessionStub());
+            var logic = new UserLogic(repo, new ExpiringTokenStore(), new LogicValidator(), new SessionStub(), NullLogger<UserLogic>.Instance);
 
             var result = await logic.UserLoginAsync(new LoginUserDto());
             Assert.IsFalse(result.IsSuccess);
@@ -91,7 +92,7 @@ namespace Blazor.Web.Test.Logic.User
         public async Task UserLoginAsync_MapsJsonErrorMessageAndCode()
         {
             var repo = new RepoStub(new ApiResponse<AuthResponseDto> { IsSuccess = false, ErrorMessage = "{\"error\":\"Bad creds\",\"code\":3004}" });
-            var logic = new UserLogic(repo, new InMemoryTokenStore(), new LogicValidator(), new SessionStub());
+            var logic = new UserLogic(repo, new InMemoryTokenStore(), new LogicValidator(), new SessionStub(), NullLogger<UserLogic>.Instance);
             var result = await logic.UserLoginAsync(new LoginUserDto());
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual("Bad creds", result.ErrorMessage);
