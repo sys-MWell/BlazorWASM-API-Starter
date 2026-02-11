@@ -57,7 +57,7 @@ namespace Blazor.Web.Domain.Auth
 
         /// <summary>
         /// Attempts a one-time restore of a persisted JWT token and updates the authentication state if successful.
-        /// Subsequent calls are ignored after the first restore attempt.
+        /// If the token is expired, it will be cleared. Subsequent calls are ignored after the first restore attempt.
         /// </summary>
         /// <returns>A task representing the asynchronous restore operation.</returns>
         public async Task RestoreFromPersistenceAsync()
@@ -65,11 +65,21 @@ namespace Blazor.Web.Domain.Auth
             if (_restored) return;
             _restored = true;
             _logger.LogDebug("Attempting to restore authentication state from persistence");
+            
             var persisted = await _persistence.GetTokenAsync();
             if (!string.IsNullOrWhiteSpace(persisted))
             {
-                await _persistence.SaveTokenAsync(persisted);
-                    _tokenStore.SetToken(persisted);
+                // Set token in store first to check expiration
+                _tokenStore.SetToken(persisted);
+                
+                if (_tokenStore.IsExpired())
+                {
+                    _logger.LogInformation("Persisted token has expired, clearing authentication state");
+                    await _persistence.ClearTokenAsync();
+                    _tokenStore.ClearToken();
+                    return;
+                }
+                
                 _cachedPrincipal = BuildPrincipal(persisted);
                 _logger.LogInformation("Authentication state restored from persistence for user: {UserId}", CurrentUser?.Id);
                 NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
@@ -91,7 +101,7 @@ namespace Blazor.Web.Domain.Auth
             _tokenStore.SetToken(token);
             await _persistence.SaveTokenAsync(token);
             _cachedPrincipal = BuildPrincipal(token);
-            _logger.LogInformation("User authenticated: {UserId}", CurrentUser?.Id);
+            _logger.LogInformation("User authenticated and token persisted: {UserId}", CurrentUser?.Id);
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
         }
 
@@ -108,7 +118,7 @@ namespace Blazor.Web.Domain.Auth
             _cachedPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
             CurrentUser = null;
             _userSession.Clear();
-            _logger.LogInformation("User logged out: {UserId}", userId);
+            _logger.LogInformation("User logged out and token cleared: {UserId}", userId);
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
         }
 
@@ -133,17 +143,16 @@ namespace Blazor.Web.Domain.Auth
                 }
 
                 var username = principal.FindFirst(ClaimTypes.Name)?.Value
-                                ?? principal.FindFirst("username")?.Value
-                                ?? principal.FindFirst("unique_name")?.Value
-                                ?? id.ToString();
+                               ?? principal.FindFirst("username")?.Value
+                               ?? principal.FindFirst("unique_name")?.Value
+                               ?? id.ToString();
                 var role = principal.FindFirst(ClaimTypes.Role)?.Value;
                 CurrentUser = new UserDetailDto { Id = id, Username = username, Role = role };
                 _userSession.SetUser(CurrentUser);
                 return principal;
             }
-            catch (Exception ex)
+            catch
             {
-                _logger.LogWarning(ex, "Failed to parse JWT token");
                 CurrentUser = null;
                 _userSession.Clear();
                 return new ClaimsPrincipal(new ClaimsIdentity());
