@@ -342,25 +342,24 @@ The JWT configuration is stored in secrets.json via Connected Services:
 
 ## Screenshots
 
+> **Note:** Add your screenshots to the `docs/images/` folder. Images are referenced from there to keep them separate from the solution files.
+
 ### Login Page
-<!-- SCREENSHOT: Add screenshot of the Account/Login page here -->
-`[Screenshot placeholder: Login form with username/password fields and Login/Register toggle]`
+![Login Page](docs/images/web-login-page.png)
 
 ### Registration Flow
-<!-- SCREENSHOT: Add screenshot of the registration form here -->
-`[Screenshot placeholder: Registration form with validation messages]`
+![Registration](docs/images/web-registration.png)
 
 ### Home Dashboard
-<!-- SCREENSHOT: Add screenshot of the authenticated home page here -->
-`[Screenshot placeholder: Main application layout after login]`
+![Dashboard](docs/images/web-dashboard.png)
 
 ### Swagger API Documentation
-<!-- SCREENSHOT: Add screenshot of Swagger UI showing available endpoints -->
-`[Screenshot placeholder: Swagger UI at https://localhost:7115/swagger]`
+![Swagger UI](docs/images/api-swagger-ui.png)
+
+
 
 ### API Authentication Flow
-<!-- SCREENSHOT: Add screenshot showing JWT token in Swagger authorize dialog -->
-`[Screenshot placeholder: Swagger Authorize button with JWT token input]`
+![API Auth Flow](docs/images/api-auth-flow.png)
 
 ---
 

@@ -1,0 +1,10 @@
+# This file ensures the images directory is tracked by Git
+# Add your README screenshots and images here
+#
+# Recommended naming convention:
+#   - api-swagger-ui.png
+#   - api-auth-flow.png
+#   - web-login-page.png
+#   - web-registration.png
+#   - web-dashboard.png
+#   - architecture-diagram.png
