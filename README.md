@@ -336,7 +336,6 @@ The JWT configuration is stored in secrets.json via Connected Services:
 - Use [User Secrets](https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets) for development
 - Use Connected Services or Azure Key Vault for connection strings and JWT settings
 - Use environment variables for production deployments
-- The JWT keys shown in examples are **placeholders only** — replace them with your own secure keys!
 - Ensure JWT keys are at least 32 characters for security
 
 ---
@@ -379,11 +378,7 @@ https://localhost:7115/swagger
 |--------|----------|-------------|---------------|
 | `POST` | `/api/Auth/register` | Register new user | No |
 | `POST` | `/api/Auth/login` | Authenticate user | No |
-| `GET` | `/api/Item` | Get all items | Yes |
-| `GET` | `/api/ItemTypes` | Get item types | Yes |
 | `GET` | `/health` | Health check | No |
-
-> **Note:** Detailed API documentation will be available in the `Blueprint.API/README.md` (coming soon)
 
 ---
 
