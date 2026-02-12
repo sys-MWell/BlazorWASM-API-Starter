@@ -264,27 +264,9 @@ Shared/
 
 ## Configuration
 
-### API Configuration (`Blueprint.API/appsettings.json`)
+### API Configuration 
 
-```json
-{
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*",
-  "Jwt": {
-    "Key": "your-secure-secret-key-min-32-characters",
-    "Issuer": "AppAPI",
-    "Audience": "AppAPIUsers",
-    "ExpiresInMinutes": 60
-  }
-}
-```
-
-> **Note:** The connection string is **not** hardcoded in `appsettings.json` for better security. See [Database Configuration](#database-configuration) below.
+> **Note:** The connection string and JWT settings are **not** hardcoded in `appsettings.json` for better security. See [Database Configuration](#database-configuration) and [JWT Configuration](#jwt-configuration) below.
 
 ### Database Configuration
 
@@ -320,28 +302,42 @@ export ConnectionStrings__DatabaseConnection="Your-Production-Connection-String"
 > **Why not hardcode in appsettings.json?**  
 > Storing connection strings in Connected Services or User Secrets prevents accidental exposure of database credentials in version control, following security best practices.
 
-### Web App Configuration (`Blazor.Web/appsettings.json`)
+### JWT Configuration
 
-```json
-{
-  "AppApi": {
-    "BaseUrl": "https://localhost:7115/"
-  },
-  "Jwt": {
-    "Issuer": "App.Web.App",
-    "Audience": "App.Web.App",
-    "Key": "your-secure-secret-key-min-32-characters"
-  }
-}
-```
+For improved security, JWT settings are managed through **Connected Services** (secrets.json) in Visual Studio rather than being hardcoded in `appsettings.json`. This applies to both the API and Web projects.
+
+#### JWT Settings Location
+
+The JWT configuration is stored in secrets.json via Connected Services:
+
+**API Project (`Blueprint.API`):**
+- `Jwt:Key` - Your secure secret key (minimum 32 characters)
+- `Jwt:Issuer` - Token issuer (e.g., "AppAPI")
+- `Jwt:Audience` - Token audience (e.g., "AppAPIUsers")
+- `Jwt:ExpiresInMinutes` - Token expiration time
+
+**Web Project (`Blazor.Web`):**
+- `Jwt:Key` - Your secure secret key (minimum 32 characters)
+- `Jwt:Issuer` - Token issuer (e.g., "App.Web.App")
+- `Jwt:Audience` - Token audience (e.g., "App.Web.App")
+
+#### Setting Up JWT Configuration
+
+**Option 1: Using Connected Services (Recommended)**
+1. In Visual Studio, right-click on the project (`Blueprint.API` or `Blazor.Web`)
+2. Select **Manage User Secrets**
+3. Add the JWT configuration to the opened `secrets.json`.
+
+> **Note:** JWT settings for the Web project are stored in secrets.json. See [JWT Configuration](#jwt-configuration) above.
 
 ### Important Security Notes
 
 - **Never commit real secrets** to version control
 - Use [User Secrets](https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets) for development
-- Use Connected Services or Azure Key Vault for connection strings
+- Use Connected Services or Azure Key Vault for connection strings and JWT settings
 - Use environment variables for production deployments
-- The JWT keys in the template are **examples only** — replace them!
+- The JWT keys shown in examples are **placeholders only** — replace them with your own secure keys!
+- Ensure JWT keys are at least 32 characters for security
 
 ---
 
