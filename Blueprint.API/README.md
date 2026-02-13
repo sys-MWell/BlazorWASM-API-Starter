@@ -1,7 +1,7 @@
 # Blueprint.API - Backend REST API
 
 <p align="center">
-  <img src="https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet" alt=".NET 8.0">
+  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet" alt=".NET 10.0">
   <img src="https://img.shields.io/badge/API-REST-green" alt="REST API">
   <img src="https://img.shields.io/badge/Auth-JWT-orange" alt="JWT Auth">
   <img src="https://img.shields.io/badge/Pattern-CQRS-blue" alt="CQRS">
@@ -11,7 +11,7 @@
 
 ## Overview
 
-The **Blueprint.API** solution provides a secure, well-architected REST API backend built with .NET 8. It implements clean architecture principles, CQRS pattern for data access, and JWT Bearer authentication.
+The **Blueprint.API** solution provides a secure, well-architected REST API backend built with .NET 10. It implements clean architecture principles, CQRS pattern for data access, and JWT Bearer authentication.
 
 > This API is designed to work with the [Blazor.Web](../Blazor.Web/README.md) frontend, but can be used independently with any client.
 
@@ -27,7 +27,7 @@ Blueprint.API/
 |   |-- Configuration/             # Service registration extensions
 |   |   |-- AuthServiceExtensions.cs
 |   |   |-- JwtServiceExtensions.cs
-|   |   `-- SwaggerServiceExtensions.cs
+|   |   `-- SwaggerServiceExtensions.cs  # OpenAPI with Scalar
 |   `-- Program.cs
 |-- Blueprint.API.Logic/           # Business Logic Layer
 |   |-- AuthLogic/
@@ -54,7 +54,7 @@ Blueprint.API/
 
 ### Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - SQL Server (LocalDB or full instance)
 
 ### 1. Configure Secrets
@@ -85,9 +85,9 @@ dotnet run
 
 The API will be available at: **https://localhost:7115**
 
-### 3. Access Swagger
+### 3. Access API Documentation
 
-Navigate to https://localhost:7115/swagger to explore the API documentation.
+Navigate to https://localhost:7115/scalar/v1 to explore the API documentation powered by **Scalar.AspNetCore** and **Microsoft.AspNetCore.OpenApi**.
 
 ---
 
@@ -153,7 +153,7 @@ Services are organized into extension methods for clean `Program.cs`:
 // Program.cs
 builder.Services.AddDatabaseServices(builder.Configuration);  // Database settings
 builder.Services.AddJwtAuthentication(builder.Configuration); // JWT config
-builder.Services.AddSwaggerWithJwtAuth();                     // Swagger + JWT
+builder.Services.AddSwaggerWithJwtAuth();                     // OpenAPI with Scalar + JWT
 
 // Repositories (CQRS)
 builder.Services.AddScoped<IAuthQueryRepository, AuthQueryRepository>();
@@ -291,7 +291,7 @@ The API uses stored procedures for data access:
 
 > Add screenshots to `docs/images/` folder at the repository root.
 
-![Swagger UI](../docs/images/api-swagger-ui.png)
+![Scalar API Documentation](../docs/images/api-swagger-ui.png)
 
 ---
 
