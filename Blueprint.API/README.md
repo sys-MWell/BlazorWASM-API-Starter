@@ -289,7 +289,7 @@ The API uses stored procedures for data access:
 
 ## Screenshots
 
-> Add screenshots to `docs/images/` folder at the repository root.
+### API Authentication
 
 ![Scalar API Documentation](../docs/images/api-swagger-ui.png)
 
