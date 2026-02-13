@@ -37,7 +37,7 @@ This repository contains a **production-ready starter template** designed to acc
 
 ### Why This Template?
 
-Building enterprise applications from scratch often means reinventing the wheel�setting up authentication, structuring projects, implementing patterns, and wiring dependencies. This template eliminates that overhead by providing:
+Building enterprise applications from scratch often means reinventing the wheel—setting up authentication, structuring projects, implementing patterns, and wiring dependencies. This template eliminates that overhead by providing:
 
 - **Battle-tested architecture** following SOLID principles
 - **Secure JWT authentication** out of the box
@@ -108,9 +108,9 @@ This template follows **Clean Architecture** principles with clear separation be
 
 ## Features
 
-This template is built with a heavy focus on **Clean Architecture** and **object-oriented design (OOD/OOP)** � favouring **composition over inheritance**, clear boundaries, and dependency inversion to keep the codebase testable, maintainable, and easy to extend.
+This template is built with a heavy focus on **Clean Architecture** and **object-oriented design (OOD/OOP)**—favouring **composition over inheritance**, clear boundaries, and dependency inversion to keep the codebase testable, maintainable, and easy to extend.
 
-> �The architecture of a software system is the shape given to that system by those who build it.� � Robert C. Martin (�Uncle Bob�)
+> “The architecture of a software system is the shape given to that system by those who build it.” — Robert C. Martin (Uncle Bob)
 
 ### Authentication and Security
 - JWT Bearer token authentication
@@ -216,7 +216,7 @@ Shared/
 
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) (recommended) or VS Code
-- SQL Server (LocalDB or full instance) � *if using database features*
+- SQL Server (LocalDB or full instance) *if using database features*
 
 ### Installation
 
