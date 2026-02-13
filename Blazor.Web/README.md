@@ -21,23 +21,23 @@ The **Blazor.Web** solution provides a modern, interactive frontend built with B
 
 ```
 Blazor.Web/
-??? Blazor.Web/                    # Main Blazor Server Host
-?   ??? Components/
-?   ?   ??? Layout/                # MainLayout, NavMenu
-?   ?   ??? Pages/                 # Account, Home, etc.
-?   ?   ??? Shared/                # Reusable components (Modals)
-?   ??? Auth/                      # Authentication state providers
-?   ?   ??? CustomAuthStateProvider.cs
-?   ??? Program.cs
-??? Blazor.Web.Client/             # WASM Client Project
-?   ??? Program.cs
-??? Blazor.Web.Logic/              # Business Logic Layer
-?   ??? Services/                  # Application services
-??? Blazor.Web.Repository/         # Data Access Layer
-?   ??? ApiClient/                 # HTTP client for API calls
-??? Blazor.Web.Models/             # Frontend-specific models
-??? Blazor.Web.Domain/             # Domain interfaces
-??? Blazor.Web.Test/               # Unit tests
+|-- Blazor.Web/                    # Main Blazor Server Host
+|   |-- Components/
+|   |   |-- Layout/                # MainLayout, NavMenu
+|   |   |-- Pages/                 # Account, Home, etc.
+|   |   `-- Shared/                # Reusable components (Modals)
+|   |-- Auth/                      # Authentication state providers
+|   |   `-- CustomAuthStateProvider.cs
+|   `-- Program.cs
+|-- Blazor.Web.Client/             # WASM Client Project
+|   `-- Program.cs
+|-- Blazor.Web.Logic/              # Business Logic Layer
+|   `-- Services/                  # Application services
+|-- Blazor.Web.Repository/         # Data Access Layer
+|   `-- ApiClient/                 # HTTP client for API calls
+|-- Blazor.Web.Models/             # Frontend-specific models
+|-- Blazor.Web.Domain/             # Domain interfaces
+`-- Blazor.Web.Test/               # Unit tests
 ```
 
 ---
