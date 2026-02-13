@@ -1,7 +1,7 @@
 # Blazor.Web - Frontend Application
 
 <p align="center">
-  <img src="https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet" alt=".NET 8.0">
+  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet" alt=".NET 10.0">
   <img src="https://img.shields.io/badge/Blazor-WebAssembly-512BD4?logo=blazor" alt="Blazor WASM">
   <img src="https://img.shields.io/badge/Auth-JWT-orange" alt="JWT Auth">
   <img src="https://img.shields.io/badge/UI-Bootstrap-purple" alt="Bootstrap">
@@ -46,7 +46,7 @@ Blazor.Web/
 
 ### Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Running instance of [Blueprint.API](../Blueprint.API/README.md)
 
 ### 1. Configure the Application

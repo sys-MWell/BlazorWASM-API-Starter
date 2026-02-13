@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet" alt=".NET 8.0">
+  <img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet" alt=".NET 10.0">
   <img src="https://img.shields.io/badge/Blazor-WebAssembly-512BD4?logo=blazor" alt="Blazor WASM">
   <img src="https://img.shields.io/badge/Architecture-Clean-green" alt="Clean Architecture">
   <img src="https://img.shields.io/badge/Auth-JWT-orange" alt="JWT Auth">
@@ -121,7 +121,7 @@ This template is built with a heavy focus on **Clean Architecture** and **object
 
 ### API Features
 - RESTful API design
-- Swagger/OpenAPI documentation with JWT support
+- OpenAPI documentation with Scalar.AspNetCore and Microsoft.AspNetCore.OpenApi (with JWT support)
 - Health check endpoints
 - Structured logging with Serilog
 - CORS configuration
@@ -214,7 +214,7 @@ Shared/
 
 ### Prerequisites
 
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) (recommended) or VS Code
 - SQL Server (LocalDB or full instance) — *if using database features*
 
@@ -353,8 +353,8 @@ The JWT configuration is stored in secrets.json via Connected Services:
 ### Home Dashboard
 ![Dashboard](docs/images/web-dashboard.png)
 
-### Swagger API Documentation
-![Swagger UI](docs/images/api-swagger-ui.png)
+### Scalar API Documentation
+![Scalar UI](docs/images/api-swagger-ui.png)
 
 
 
@@ -365,10 +365,10 @@ The JWT configuration is stored in secrets.json via Connected Services:
 
 ## API Documentation
 
-When running in Development mode, the API exposes Swagger documentation at:
+When running in Development mode, the API exposes OpenAPI documentation powered by **Scalar.AspNetCore** and **Microsoft.AspNetCore.OpenApi** at:
 
 ```
-https://localhost:7115/swagger
+https://localhost:7115/scalar/v1
 ```
 
 ### Available Endpoints
