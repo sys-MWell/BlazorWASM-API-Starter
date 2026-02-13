@@ -1,6 +1,7 @@
 using Blueprint.API.Configuration;
 using Blueprint.API.Logic.Helpers;
 using Blueprint.API.Logic.UserLogic;
+using Blueprint.API.Logic.Validation;
 using Blueprint.API.Repository.AuthRepository.Commands;
 using Blueprint.API.Repository.AuthRepository.Queries;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -22,6 +23,7 @@ builder.Services.AddOpenApiWithJwtAuth();
 builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["ready"]);
 builder.Services.AddDatabaseServices(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddValidationServices();
 
 builder.Services.AddScoped<IAuthQueryRepository, AuthQueryRepository>();
 builder.Services.AddScoped<IAuthCommandRepository, AuthCommandRepository>();

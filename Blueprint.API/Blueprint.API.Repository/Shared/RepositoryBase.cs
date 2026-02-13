@@ -13,7 +13,7 @@ namespace Blueprint.API.Repository.Shared
         private readonly DatabaseSettings _databaseSettings;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RepositoryBase"/> class.
+        /// Initialises a new instance of the <see cref="RepositoryBase"/> class.
         /// </summary>
         /// <param name="databaseSettings">Database settings containing the connection string.</param>
         protected RepositoryBase(DatabaseSettings databaseSettings)

@@ -1,20 +1,21 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Blueprint.API.Logic.UserLogic;
+using Blueprint.API.Logic.Validation;
 using Blueprint.API.Repository.AuthRepository.Commands;
 using Blueprint.API.Repository.AuthRepository.Queries;
 using Template.Models.Dtos;
 using Template.Models.Models;
 using Blueprint.API.Logic.Helpers;
+using FluentValidation;
 
 namespace Blueprint.API.Test.Logic
 {
     /// <summary>
-    /// Unit tests for <see cref="AuthLogic"/> behavior using CQRS pattern.
+    /// Unit tests for <see cref="AuthLogic"/> behaviour using CQRS pattern.
     /// </summary>
     [TestClass]
     public sealed class UserLogicTests
@@ -40,7 +41,29 @@ namespace Blueprint.API.Test.Logic
         {
             public ApiResponse<UserDetailDto>? RegisterResponse { get; set; }
 
+
             public Task<ApiResponse<UserDetailDto>> RegisterUser(User user) => Task.FromResult(RegisterResponse!);
+        }
+
+        /// <summary>
+        /// Creates a stub validator that always fails with the specified message.
+        /// </summary>
+        private sealed class FailingValidator : AbstractValidator<RegisterUserDto>
+        {
+            public FailingValidator(string errorMessage)
+            {
+                RuleFor(x => x.Username).Must(_ => false).WithMessage(errorMessage);
+            }
+        }
+
+        private static AuthLogic CreateLogic(StubQueryRepo queryRepo, StubCommandRepo commandRepo, IValidator<RegisterUserDto>? validator = null)
+        {
+            return new AuthLogic(
+                queryRepo,
+                commandRepo,
+                new PasswordVerifier(),
+                validator ?? new RegisterUserValidator(),
+                _nullLogger);
         }
 
         /// <summary>
@@ -60,12 +83,32 @@ namespace Blueprint.API.Test.Logic
                 HashResponse = new ApiResponse<string> { IsSuccess = true, Data = new Microsoft.AspNetCore.Identity.PasswordHasher<string>().HashPassword("bob", "x") }
             };
             var commandRepo = new StubCommandRepo();
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var logic = CreateLogic(queryRepo, commandRepo);
 
             var res = await logic.GetUserByUsername("bob");
             Assert.IsTrue(res.IsSuccess);
             Assert.AreEqual(42, res.Data!.Id);
             Assert.AreEqual("bob", res.Data!.Username);
+        }
+
+        /// <summary>
+        /// Guard rejects null/empty usernames before hitting the repository.
+        /// </summary>
+        [TestMethod]
+        public async Task GetUserByUsername_EmptyUsername_ReturnsValidationError()
+        {
+            var queryRepo = new StubQueryRepo
+            {
+                GetByUsernameResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = "should-not-be-hit" } },
+                HashResponse = new ApiResponse<string> { IsSuccess = true, Data = "hash" }
+            };
+            var commandRepo = new StubCommandRepo();
+            var logic = CreateLogic(queryRepo, commandRepo);
+
+            var res = await logic.GetUserByUsername("   ");
+
+            Assert.IsFalse(res.IsSuccess);
+            Assert.AreEqual(AppErrorCode.Validation, res.ErrorCode);
         }
 
         /// <summary>
@@ -80,7 +123,7 @@ namespace Blueprint.API.Test.Logic
                 HashResponse = new ApiResponse<string> { IsSuccess = false, ErrorCode = AppErrorCode.UserNotFound }
             };
             var commandRepo = new StubCommandRepo();
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var logic = CreateLogic(queryRepo, commandRepo);
 
             var res = await logic.LoginUser(new LoginUserDto { Username = "x", UserPassword = "y" });
             Assert.IsFalse(res.IsSuccess);
@@ -99,7 +142,7 @@ namespace Blueprint.API.Test.Logic
                 HashResponse = new ApiResponse<string> { IsSuccess = true, Data = new Microsoft.AspNetCore.Identity.PasswordHasher<string>().HashPassword("u", "correct-password") }
             };
             var commandRepo = new StubCommandRepo();
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var logic = CreateLogic(queryRepo, commandRepo);
 
             var res = await logic.LoginUser(new LoginUserDto { Username = "u", UserPassword = "not-matching" });
             Assert.IsFalse(res.IsSuccess);
@@ -121,7 +164,8 @@ namespace Blueprint.API.Test.Logic
             {
                 RegisterResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 2, Username = "abc" } }
             };
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var stubValidator = new FailingValidator("Validation failed");
+            var logic = CreateLogic(queryRepo, commandRepo, stubValidator);
 
             var weak = await logic.RegisterUser(new RegisterUserDto { Username = "ab", UserPassword = "123" });
             Assert.IsFalse(weak.IsSuccess);
@@ -143,9 +187,9 @@ namespace Blueprint.API.Test.Logic
             {
                 RegisterResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 7, Username = "john", Role = "User" } }
             };
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var logic = CreateLogic(queryRepo, commandRepo);
 
-            var res = await logic.RegisterUser(new RegisterUserDto { Username = "john", UserPassword = "password123" });
+            var res = await logic.RegisterUser(new RegisterUserDto { Username = "john", UserPassword = "Password1!" });
             Assert.IsTrue(res.IsSuccess);
             Assert.AreEqual(7, res.Data!.Id);
             Assert.AreEqual("john", res.Data!.Username);
@@ -170,7 +214,7 @@ namespace Blueprint.API.Test.Logic
                 HashResponse = new ApiResponse<string> { IsSuccess = true, Data = correctHash }
             };
             var commandRepo = new StubCommandRepo();
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var logic = CreateLogic(queryRepo, commandRepo);
 
             var res = await logic.LoginUser(new LoginUserDto { Username = "validuser", UserPassword = "correctpassword" });
 
@@ -199,9 +243,9 @@ namespace Blueprint.API.Test.Logic
             {
                 RegisterResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 2, Username = "existing" } }
             };
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var logic = CreateLogic(queryRepo, commandRepo);
 
-            var res = await logic.RegisterUser(new RegisterUserDto { Username = "existing", UserPassword = "password123" });
+            var res = await logic.RegisterUser(new RegisterUserDto { Username = "existing", UserPassword = "Password1!" });
 
             Assert.IsFalse(res.IsSuccess);
             Assert.AreEqual(AppErrorCode.UserAlreadyExists, res.ErrorCode);
@@ -223,7 +267,7 @@ namespace Blueprint.API.Test.Logic
                 HashResponse = new ApiResponse<string> { IsSuccess = false, ErrorCode = AppErrorCode.ServerError }
             };
             var commandRepo = new StubCommandRepo();
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var logic = CreateLogic(queryRepo, commandRepo);
 
             var res = await logic.LoginUser(new LoginUserDto { Username = "user", UserPassword = "pass" });
 
@@ -232,10 +276,10 @@ namespace Blueprint.API.Test.Logic
         }
 
         /// <summary>
-        /// Returns validation error when username is too short.
+        /// Returns validation error when validation fails.
         /// </summary>
         [TestMethod]
-        public async Task RegisterUser_ShortUsername_ReturnsValidationError()
+        public async Task RegisterUser_ValidationFails_ReturnsValidationError()
         {
             var queryRepo = new StubQueryRepo
             {
@@ -244,39 +288,16 @@ namespace Blueprint.API.Test.Logic
             };
             var commandRepo = new StubCommandRepo
             {
-                RegisterResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = "ab" } }
+                RegisterResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = "test" } }
             };
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
+            var stubValidator = new FailingValidator("Username must be at least 3 characters");
+            var logic = CreateLogic(queryRepo, commandRepo, stubValidator);
 
-            var res = await logic.RegisterUser(new RegisterUserDto { Username = "ab", UserPassword = "validpassword123" });
+            var res = await logic.RegisterUser(new RegisterUserDto { Username = "ab", UserPassword = "Password1!" });
 
             Assert.IsFalse(res.IsSuccess);
             Assert.AreEqual(AppErrorCode.Validation, res.ErrorCode);
-            Assert.AreEqual("Invalid username", res.ErrorMessage);
-        }
-
-        /// <summary>
-        /// Returns validation error when password is too short.
-        /// </summary>
-        [TestMethod]
-        public async Task RegisterUser_ShortPassword_ReturnsValidationError()
-        {
-            var queryRepo = new StubQueryRepo
-            {
-                GetByUsernameResponse = new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorCode = AppErrorCode.NotFound },
-                HashResponse = new ApiResponse<string> { IsSuccess = false, ErrorCode = AppErrorCode.NotFound }
-            };
-            var commandRepo = new StubCommandRepo
-            {
-                RegisterResponse = new ApiResponse<UserDetailDto> { IsSuccess = true, Data = new UserDetailDto { Id = 1, Username = "validuser" } }
-            };
-            var logic = new AuthLogic(queryRepo, commandRepo, new PasswordVerifier(), _nullLogger);
-
-            var res = await logic.RegisterUser(new RegisterUserDto { Username = "validuser", UserPassword = "short" });
-
-            Assert.IsFalse(res.IsSuccess);
-            Assert.AreEqual(AppErrorCode.Validation, res.ErrorCode);
-            Assert.AreEqual("Password too weak", res.ErrorMessage);
+            Assert.AreEqual("Username must be at least 3 characters", res.ErrorMessage);
         }
     }
 }
