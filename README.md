@@ -37,7 +37,7 @@ This repository contains a **production-ready starter template** designed to acc
 
 ### Why This Template?
 
-Building enterprise applications from scratch often means reinventing the wheel—setting up authentication, structuring projects, implementing patterns, and wiring dependencies. This template eliminates that overhead by providing:
+Building enterprise applications from scratch often means reinventing the wheelï¿½setting up authentication, structuring projects, implementing patterns, and wiring dependencies. This template eliminates that overhead by providing:
 
 - **Battle-tested architecture** following SOLID principles
 - **Secure JWT authentication** out of the box
@@ -108,9 +108,9 @@ This template follows **Clean Architecture** principles with clear separation be
 
 ## Features
 
-This template is built with a heavy focus on **Clean Architecture** and **object-oriented design (OOD/OOP)** — favouring **composition over inheritance**, clear boundaries, and dependency inversion to keep the codebase testable, maintainable, and easy to extend.
+This template is built with a heavy focus on **Clean Architecture** and **object-oriented design (OOD/OOP)** ï¿½ favouring **composition over inheritance**, clear boundaries, and dependency inversion to keep the codebase testable, maintainable, and easy to extend.
 
-> “The architecture of a software system is the shape given to that system by those who build it.” — Robert C. Martin (“Uncle Bob”)
+> ï¿½The architecture of a software system is the shape given to that system by those who build it.ï¿½ ï¿½ Robert C. Martin (ï¿½Uncle Bobï¿½)
 
 ### Authentication and Security
 - JWT Bearer token authentication
@@ -216,7 +216,7 @@ Shared/
 
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) (recommended) or VS Code
-- SQL Server (LocalDB or full instance) — *if using database features*
+- SQL Server (LocalDB or full instance) ï¿½ *if using database features*
 
 ### Installation
 
@@ -342,24 +342,82 @@ The JWT configuration is stored in secrets.json via Connected Services:
 
 ## Screenshots
 
-> **Note:** Add your screenshots to the `docs/images/` folder. Images are referenced from there to keep them separate from the solution files.
-
 ### Login Page
 ![Login Page](docs/images/web-login-page.png)
 
-### Registration Flow
-![Registration](docs/images/web-registration.png)
+### Register Page
+![Register Page](docs/images/web-register-page.png)
 
 ### Home Dashboard
-![Dashboard](docs/images/web-dashboard.png)
+![Dashboard](docs/images/web-home-page.png)
 
 ### Scalar API Documentation
 ![Scalar UI](docs/images/api-swagger-ui.png)
 
-
-
 ### API Authentication Flow
 ![API Auth Flow](docs/images/api-auth-flow.png)
+```
+sequenceDiagram
+    participant Client as Client (Blazor/App)
+    participant API as AuthController
+    participant Logic as AuthLogic
+    participant Repo as AuthRepository
+    participant DB as Database
+    participant Token as TokenProvider
+
+    %% Registration Flow
+    rect rgb(230, 245, 230)
+        Note over Client,Token: Registration Flow
+        Client->>+API: POST /api/Auth/register
+        API->>+Logic: RegisterUser(RegisterUserDto)
+        Logic->>Logic: Hash Password
+        Logic->>+Repo: CreateUser(User)
+        Repo->>+DB: INSERT User
+        DB-->>-Repo: User Created
+        Repo-->>-Logic: Result<User>
+        Logic-->>-API: Result<User>
+        API->>+Token: GenerateAuthResponse(User)
+        Token->>Token: Create JWT Claims
+        Token->>Token: Sign Token
+        Token-->>-API: AuthResponseDto
+        API-->>-Client: 200 OK + JWT Token
+    end
+
+    %% Login Flow
+    rect rgb(230, 240, 255)
+        Note over Client,Token: Login Flow
+        Client->>+API: POST /api/Auth/login
+        API->>+Logic: LoginUser(LoginUserDto)
+        Logic->>+Repo: GetUserByUsername()
+        Repo->>+DB: SELECT User
+        DB-->>-Repo: User Data
+        Repo-->>-Logic: User
+        Logic->>Logic: Verify Password Hash
+        alt Password Valid
+            Logic-->>API: Result<User> (Success)
+            API->>+Token: GenerateAuthResponse(User)
+            Token-->>-API: AuthResponseDto
+            API-->>Client: 200 OK + JWT Token
+        else Password Invalid
+            Logic-->>-API: Result (Failure)
+            API-->>-Client: 401 Unauthorized
+        end
+    end
+
+    %% Using Token
+    rect rgb(255, 245, 230)
+        Note over Client,DB: Accessing Protected Endpoint
+        Client->>+API: GET /api/protected
+        Note right of Client: Authorization: Bearer {token}
+        API->>API: Validate JWT Token
+        alt Token Valid
+            API->>API: Extract Claims
+            API-->>Client: 200 OK + Data
+        else Token Invalid/Expired
+            API-->>-Client: 401 Unauthorized
+        end
+    end
+```
 
 ---
 
@@ -390,3 +448,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 - [Open an issue](https://github.com/sys-MWell/BlazorWASM-API-Starter/issues)
+---

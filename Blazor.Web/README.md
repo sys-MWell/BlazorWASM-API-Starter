@@ -331,16 +331,14 @@ Enable detailed logging:
 
 ## Screenshots
 
-> Add screenshots to `docs/images/` folder at the repository root.
-
 ### Login Page
 ![Login Page](../docs/images/web-login-page.png)
 
 ### Registration
-![Registration](../docs/images/web-registration.png)
+![Registration](../docs/images/web-register-page.png)
 
 ### Dashboard
-![Dashboard](../docs/images/web-dashboard.png)
+![Dashboard](../docs/images/web-home-page.png.png)
 
 ---
 
