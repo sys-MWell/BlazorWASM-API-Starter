@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Extensions;
 using Microsoft.Data.SqlClient;
 using System.Collections;
 
@@ -29,7 +28,7 @@ namespace Blueprint.API.Helpers
                 var result = await action();
 
                 // Handle NotFound scenarios
-                if (result == null || result.IsNullOrDefault() || IsEmptyEnumerable(result))
+                if (result is null || IsNullOrDefault(result) || IsEmptyEnumerable(result))
                 {
                     return new NotFoundObjectResult(notFoundMessage ?? "The requested resource was not found.");
                 }
@@ -78,6 +77,21 @@ namespace Blueprint.API.Helpers
                         d.Dispose();
                     }
                 }
+            }
+
+            return false;
+        }
+
+        private static bool IsNullOrDefault<T>(T value)
+        {
+            if (value is null)
+            {
+                return true;
+            }
+
+            if (typeof(T).IsValueType)
+            {
+                return value.Equals(default(T));
             }
 
             return false;

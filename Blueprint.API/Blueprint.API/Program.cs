@@ -18,8 +18,8 @@ builder.Host.UseSerilog();
 
 // Add services
 builder.Services.AddControllers();
-builder.Services.AddSwaggerWithJwtAuth();
-builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "ready" });
+builder.Services.AddOpenApiWithJwtAuth();
+builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["ready"]);
 builder.Services.AddDatabaseServices(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
@@ -32,7 +32,7 @@ builder.Services.AddSingleton<ITokenProvider, TokenProvider>();
 var app = builder.Build();
 
 // Configure middleware pipeline
-app.UseSwaggerInDevelopment();
+app.UseOpenApiInDevelopment();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
