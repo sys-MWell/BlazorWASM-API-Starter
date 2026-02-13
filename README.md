@@ -389,7 +389,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-If you have questions or need help:
-
 - [Open an issue](https://github.com/sys-MWell/BlazorWASM-API-Starter/issues)
-- Start a discussion in the repository
