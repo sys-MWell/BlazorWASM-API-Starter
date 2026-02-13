@@ -21,31 +21,31 @@ The **Blueprint.API** solution provides a secure, well-architected REST API back
 
 ```
 Blueprint.API/
-??? Blueprint.API/                 # API Host (Controllers, Configuration)
-?   ??? Controllers/
-?   ?   ??? AuthController.cs      # Authentication endpoints
-?   ??? Configuration/             # Service registration extensions
-?   ?   ??? AuthServiceExtensions.cs
-?   ?   ??? JwtServiceExtensions.cs
-?   ?   ??? SwaggerServiceExtensions.cs
-?   ??? Program.cs
-??? Blueprint.API.Logic/           # Business Logic Layer
-?   ??? AuthLogic/
-?   ?   ??? AuthLogic.cs           # Authentication business rules
-?   ?   ??? IAuthLogic.cs
-?   ??? Helpers/
-?       ??? TokenProvider.cs       # JWT token generation
-?       ??? PasswordVerifier.cs    # Password hashing
-??? Blueprint.API.Repository/      # Data Access Layer (CQRS)
-?   ??? AuthRepository/
-?       ??? Commands/              # Write operations
-?       ?   ??? AuthCommandRepository.cs
-?       ?   ??? IAuthCommandRepository.cs
-?       ??? Queries/               # Read operations
-?           ??? AuthQueryRepository.cs
-?           ??? IAuthQueryRepository.cs
-??? Blueprint.API.Models/          # API-specific models
-??? Blueprint.API.Test/            # Unit tests
+|-- Blueprint.API/                 # API Host (Controllers, Configuration)
+|   |-- Controllers/
+|   |   `-- AuthController.cs      # Authentication endpoints
+|   |-- Configuration/             # Service registration extensions
+|   |   |-- AuthServiceExtensions.cs
+|   |   |-- JwtServiceExtensions.cs
+|   |   `-- SwaggerServiceExtensions.cs
+|   `-- Program.cs
+|-- Blueprint.API.Logic/           # Business Logic Layer
+|   |-- AuthLogic/
+|   |   |-- AuthLogic.cs           # Authentication business rules
+|   |   `-- IAuthLogic.cs
+|   `-- Helpers/
+|       |-- TokenProvider.cs       # JWT token generation
+|       `-- PasswordVerifier.cs    # Password hashing
+|-- Blueprint.API.Repository/      # Data Access Layer (CQRS)
+|   `-- AuthRepository/
+|       |-- Commands/              # Write operations
+|       |   |-- AuthCommandRepository.cs
+|       |   `-- IAuthCommandRepository.cs
+|       `-- Queries/               # Read operations
+|           |-- AuthQueryRepository.cs
+|           `-- IAuthQueryRepository.cs
+|-- Blueprint.API.Models/          # API-specific models
+`-- Blueprint.API.Test/            # Unit tests
 ```
 
 ---
