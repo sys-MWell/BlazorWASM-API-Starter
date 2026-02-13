@@ -13,6 +13,9 @@ namespace Blueprint.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
+    [Tags("Authentication")]
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
@@ -34,11 +37,29 @@ namespace Blueprint.API.Controllers
         }
 
         /// <summary>
-        /// Registers a new user.
+        /// Registers a new user account.
         /// </summary>
-        /// <param name="userDetails">The registration details.</param>
-        /// <returns>An <see cref="IActionResult"/> with an <see cref="AuthResponseDto"/> payload if successful.</returns>
+        /// <remarks>
+        /// Creates a new user account with the provided credentials. Upon successful registration,
+        /// returns a JWT token that can be used for subsequent authenticated requests.
+        /// 
+        /// **Password Requirements:**
+        /// - Minimum 8 characters
+        /// - At least one uppercase letter
+        /// - At least one lowercase letter
+        /// - At least one number
+        /// </remarks>
+        /// <param name="userDetails">The registration details including username, email, and password.</param>
+        /// <returns>An authentication response containing the JWT token and user details.</returns>
+        /// <response code="200">Registration successful. Returns JWT token and user info.</response>
+        /// <response code="400">Invalid registration data or validation errors.</response>
+        /// <response code="409">Username or email already exists.</response>
+        /// <response code="500">Internal server error during registration.</response>
         [HttpPost("register")]
+        [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AuthResponseDto>> RegisterUser([FromBody] RegisterUserDto userDetails)
         {
             _logger.LogInformation("Registration attempt for username: {Username}", userDetails.Username);
@@ -63,11 +84,30 @@ namespace Blueprint.API.Controllers
         }
 
         /// <summary>
-        /// Logs a user in.
+        /// Authenticates a user and returns a JWT token.
         /// </summary>
-        /// <param name="dto">The login credentials.</param>
-        /// <returns>An <see cref="IActionResult"/> with an <see cref="AuthResponseDto"/> payload if successful.</returns>
+        /// <remarks>
+        /// Validates the provided credentials against stored user data. Upon successful authentication,
+        /// returns a JWT token that should be included in the Authorization header for protected endpoints.
+        /// 
+        /// **Usage:**
+        /// ```
+        /// Authorization: Bearer {token}
+        /// ```
+        /// 
+        /// The token expires after the configured duration (default: 60 minutes).
+        /// </remarks>
+        /// <param name="dto">The login credentials containing username and password.</param>
+        /// <returns>An authentication response containing the JWT token and user details.</returns>
+        /// <response code="200">Login successful. Returns JWT token and user info.</response>
+        /// <response code="400">Invalid request data.</response>
+        /// <response code="401">Invalid username or password.</response>
+        /// <response code="500">Internal server error during authentication.</response>
         [HttpPost("login")]
+        [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginUserDto dto)
         {
             _logger.LogInformation("Login attempt for username: {Username}", dto.Username);
