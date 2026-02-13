@@ -119,6 +119,13 @@ This template is built with a heavy focus on **Clean Architecture** and **object
 - Custom `AuthenticationStateProvider` for Blazor
 - Protected routes with `[Authorize]` attributes
 
+### Validation
+- **FluentValidation** for enterprise-level input validation
+- Centralised validation constants for consistent rules
+- Password complexity requirements (uppercase, lowercase, digit, special character)
+- Username format validation (alphanumeric, length constraints)
+- Direct validator injection via dependency injection
+
 ### API Features
 - RESTful API design
 - OpenAPI documentation with Scalar.AspNetCore and Microsoft.AspNetCore.OpenApi (with JWT support)
@@ -151,6 +158,7 @@ This template is built with a heavy focus on **Clean Architecture** and **object
 - **CQRS-lite** approach (separating reads and writes) within the repository layer
 - **Options pattern** for strongly-typed configuration
 - **Composition over inheritance** to build behaviour from small, focused units
+- **FluentValidation** for declarative, testable validation rules
 
 ---
 

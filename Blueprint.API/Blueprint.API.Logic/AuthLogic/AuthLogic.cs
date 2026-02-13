@@ -1,6 +1,7 @@
 ﻿using Blueprint.API.Logic.Helpers;
 using Blueprint.API.Repository.AuthRepository.Commands;
 using Blueprint.API.Repository.AuthRepository.Queries;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Template.Models.Dtos;
 using Template.Models.Models;
@@ -15,11 +16,13 @@ namespace Blueprint.API.Logic.UserLogic
         IAuthQueryRepository queryRepository,
         IAuthCommandRepository commandRepository,
         IPasswordVerifier passwordVerifier,
+        IValidator<RegisterUserDto> registerValidator,
         ILogger<AuthLogic> logger) : IAuthLogic
     {
         private readonly IAuthQueryRepository _queryRepository = queryRepository ?? throw new ArgumentNullException(nameof(queryRepository));
         private readonly IAuthCommandRepository _commandRepository = commandRepository ?? throw new ArgumentNullException(nameof(commandRepository));
         private readonly IPasswordVerifier _passwordVerifier = passwordVerifier ?? throw new ArgumentNullException(nameof(passwordVerifier));
+        private readonly IValidator<RegisterUserDto> _registerValidator = registerValidator ?? throw new ArgumentNullException(nameof(registerValidator));
         private readonly ILogger<AuthLogic> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         /// <summary>
@@ -31,6 +34,12 @@ namespace Blueprint.API.Logic.UserLogic
         /// </returns>
         public async Task<ApiResponse<UserDetailDto>> GetUserByUsername(string username)
         {
+            var guardError = Guard.ValidateNotNullOrEmpty<UserDetailDto>(username, "Username");
+            if (guardError is not null)
+            {
+                return guardError;
+            }
+
             _logger.LogDebug("Retrieving user by username: {Username}", username);
 
             var repositoryResponse = await _queryRepository.GetUserByUsername(username);
@@ -38,20 +47,17 @@ namespace Blueprint.API.Logic.UserLogic
             if (!repositoryResponse.IsSuccess)
             {
                 _logger.LogDebug("User not found: {Username}", username);
+                return ApiResponseLogicHelper.HandleRepositoryResponse(repositoryResponse, default!);
             }
 
-            var mapped = repositoryResponse.Data ?? new UserDetailDto { Id = 0, Username = string.Empty, Role = null };
+            var mapped = repositoryResponse.Data;
+            if (mapped is null)
+            {
+                _logger.LogError("User lookup succeeded but returned null data for username: {Username}", username);
+                return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("User details returned with faults", AppErrorCode.ServerError);
+            }
 
-            return ApiResponseLogicHelper.HandleRepositoryResponse(
-                new ApiResponse<UserDetailDto>
-                {
-                    IsSuccess = repositoryResponse.IsSuccess,
-                    ErrorMessage = repositoryResponse.ErrorMessage,
-                    ErrorCode = repositoryResponse.ErrorCode,
-                    Data = mapped
-                },
-                mapped
-            );
+            return ApiResponseLogicHelper.HandleRepositoryResponse(repositoryResponse, mapped);
         }
 
         /// <summary>
@@ -87,22 +93,14 @@ namespace Blueprint.API.Logic.UserLogic
                 return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("Invalid password", AppErrorCode.PasswordInvalid);
             }
 
-            if (!existingUser.IsSuccess || existingUser.Data is null)
-            {
-                _logger.LogError("Login failed - user details returned with faults for username: {Username}", userLogin.Username);
-                return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>("User details returned with faults", AppErrorCode.ServerError);
-            }
-
             _logger.LogDebug("Login successful for username: {Username}", userLogin.Username);
 
-            var successData = new UserDetailDto
+            return new ApiResponse<UserDetailDto>
             {
-                Id = existingUser.Data!.Id,
-                Username = existingUser.Data.Username,
-                Role = existingUser.Data.Role
+                IsSuccess = true,
+                Data = existingUser.Data,
+                ErrorCode = AppErrorCode.None
             };
-
-            return ApiResponseLogicHelper.HandleRepositoryResponse(existingUser, successData);
         }
 
         /// <summary>
@@ -116,16 +114,13 @@ namespace Blueprint.API.Logic.UserLogic
         {
             _logger.LogDebug("Registration attempt for username: {Username}", userRegister.Username);
 
-            if (string.IsNullOrWhiteSpace(userRegister.Username) || userRegister.Username.Length < 3)
+            var validationResult = _registerValidator.Validate(userRegister);
+            if (!validationResult.IsValid)
             {
-                _logger.LogDebug("Registration failed - invalid username: {Username}", userRegister.Username);
-                return new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorMessage = "Invalid username", ErrorCode = AppErrorCode.Validation };
-            }
-
-            if (string.IsNullOrWhiteSpace(userRegister.UserPassword) || userRegister.UserPassword.Length < 8)
-            {
-                _logger.LogDebug("Registration failed - password too weak for username: {Username}", userRegister.Username);
-                return new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorMessage = "Password too weak", ErrorCode = AppErrorCode.Validation };
+                var errors = string.Join(" ", validationResult.Errors.Select(e => e.ErrorMessage));
+                _logger.LogDebug("Registration validation failed for username: {Username}. Error: {Error}", 
+                    userRegister.Username, errors);
+                return ApiResponseLogicHelper.CreateErrorResponse<UserDetailDto>(errors, AppErrorCode.Validation);
             }
 
             var existingUser = await GetUserByUsername(userRegister.Username);
@@ -156,19 +151,14 @@ namespace Blueprint.API.Logic.UserLogic
                     repositoryResponse.ErrorCode ?? AppErrorCode.ServerError
                 );
             }
-            else if (repositoryResponse.IsSuccess)
-            {
-                _logger.LogDebug("Registration successful for username: {Username}", userRegister.Username);
-                return new ApiResponse<UserDetailDto>
-                {
-                    IsSuccess = true,
-                    Data = repositoryResponse.Data!,
-                    ErrorCode = AppErrorCode.None
-                };
-            }
 
-            _logger.LogError("Registration failed with unexpected error for username: {Username}", userRegister.Username);
-            return new ApiResponse<UserDetailDto> { IsSuccess = false, ErrorMessage = "Unexpected error occurred", ErrorCode = AppErrorCode.ServerError };
+            _logger.LogDebug("Registration successful for username: {Username}", userRegister.Username);
+            return new ApiResponse<UserDetailDto>
+            {
+                IsSuccess = true,
+                Data = repositoryResponse.Data!,
+                ErrorCode = AppErrorCode.None
+            };
         }
     }
 }

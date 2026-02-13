@@ -1,7 +1,6 @@
 ﻿using Template.Models.Dtos;
 using Template.Models.Models;
 using Blueprint.API.Logic.UserLogic;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Blueprint.API.Helpers;
 using Blueprint.API.Logic.Helpers;
@@ -20,11 +19,10 @@ namespace Blueprint.API.Controllers
     {
         private readonly ILogger<AuthController> _logger;
         private readonly IAuthLogic _userLogic;
-        private readonly PasswordHasher<User> _passwordHasher = new();
         private readonly ITokenProvider _tokenProvider;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuthController"/> class.
+        /// Initialises a new instance of the <see cref="AuthController"/> class.
         /// </summary>
         /// <param name="logger">The logger instance.</param>
         /// <param name="userLogic">User logic service.</param>

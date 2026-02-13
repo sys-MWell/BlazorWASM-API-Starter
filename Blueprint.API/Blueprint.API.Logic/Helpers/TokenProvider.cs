@@ -19,7 +19,7 @@ namespace Blueprint.API.Logic.Helpers
         private readonly IConfiguration _configuration;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TokenProvider"/> class.
+        /// Initialises a new instance of the <see cref="TokenProvider"/> class.
         /// </summary>
         /// <param name="logger">The logger used to log token-related operations.</param>
         /// <param name="configuration">The application configuration containing JWT settings.</param>
