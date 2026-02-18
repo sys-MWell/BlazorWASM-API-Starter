@@ -36,13 +36,12 @@ namespace Blazor.Web.Repository.User
             try
             {
                 var url = $"{this.settings.AppApiBaseUrl}{ApiSettings.Auth.Login}";
+                this.logger.LogInformation("Login request starting. Endpoint: {Endpoint}, Username: {Username}", ApiSettings.Auth.Login, loginCredentials?.Username);
+
                 var response = await this.httpClient.PostAsJsonAsync(url, loginCredentials);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    this.logger.LogWarning("Login failed with status {StatusCode} error: {Error}", response.StatusCode, error);
-                }
-                return await ApiResponseRepoHelper.HandleHttpResponseAsync<AuthResponseDto>(response);
+
+                this.logger.LogInformation("Register request received. StatusCode: {StatusCode}", (int)response.StatusCode);
+                return await ApiResponseRepoHelper.HandleHttpResponseAsync<AuthResponseDto>(response, this.logger);
             }
             catch (Exception ex)
             {
@@ -70,13 +69,12 @@ namespace Blazor.Web.Repository.User
             try
             {
                 var url = $"{this.settings.AppApiBaseUrl}{ApiSettings.Auth.Register}";
+                this.logger.LogInformation("Register request starting. Endpoint: {Endpoint}, Username: {Username}", ApiSettings.Auth.Register, registercredentials?.Username);
+
                 var response = await this.httpClient.PostAsJsonAsync(url, registercredentials);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    this.logger.LogWarning("register failed with status {StatusCode} error: {Error}", response.StatusCode, error);
-                }
-                return await ApiResponseRepoHelper.HandleHttpResponseAsync<AuthResponseDto>(response);
+
+                this.logger.LogInformation("Register request received. StatusCode: {StatusCode}", (int)response.StatusCode);
+                return await ApiResponseRepoHelper.HandleHttpResponseAsync<AuthResponseDto>(response, this.logger);
             }
             catch (Exception ex)
             {
