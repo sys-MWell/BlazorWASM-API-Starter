@@ -9,9 +9,19 @@ using Blazor.Web.Repository.User;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: $"Logs\\{DateTime.Now:yyyy-MM-dd}\\log-.txt",
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Authentication/Authorization (JWT Bearer)
 builder.Services.AddAuthentication(options =>
