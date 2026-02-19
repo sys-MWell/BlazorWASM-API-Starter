@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 
 @using Blazor.Web.Logic.Services.Validation
-@using Blazor.Web.Logic.User
 @using Blazor.Web.Logic.Auth
 @using Blazor.Web.Domain.Auth
 @using Microsoft.AspNetCore.Components.Authorization
@@ -113,7 +112,6 @@
     private Func<Task> _onConfirmAction = () => Task.CompletedTask;
     private bool _isRegisterMode;
 
-    [Inject] private IUserLogic UserLogic { get; set; } = null!;
     [Inject] private ICredentialValidator Validator { get; set; } = null!;
     [Inject] private NavigationManager Nav { get; set; } = null!;
     [Inject] private AuthenticationStateProvider AuthProvider { get; set; } = null!;
