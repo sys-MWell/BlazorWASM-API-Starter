@@ -14,6 +14,15 @@ namespace Blazor.Web.Repository.Shared
     /// </summary>
     public static class ApiResponseRepoHelper
     {
+        /// <summary>
+        /// Processes an <see cref="HttpResponseMessage"/> and constructs an <see cref="ApiResponse{T}"/> without logging.
+        /// </summary>
+        /// <typeparam name="T">The target type to deserialize the JSON content into.</typeparam>
+        /// <param name="response">The HTTP response to handle.</param>
+        /// <returns>
+        /// An <see cref="ApiResponse{T}"/> indicating success or failure, containing deserialized data when successful,
+        /// or error information when unsuccessful.
+        /// </returns>
         public static Task<ApiResponse<T>> HandleHttpResponseAsync<T>(HttpResponseMessage response)
             => HandleHttpResponseAsync<T>(response, logger: null);
 

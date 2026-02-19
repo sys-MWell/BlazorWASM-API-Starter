@@ -2,7 +2,6 @@ using Blazor.Web.Domain.Auth;
 using Blazor.Web.Domain.Validation;
 using Blazor.Web.Domain.Shared;
 using Blazor.Web.Logic.Services.Validation;
-using Blazor.Web.Logic.User;
 using Blazor.Web.Logic.Auth;
 using Blazor.Web.Auth;
 using Blazor.Web.Repository.User;
@@ -77,7 +76,6 @@ builder.Services.AddScoped<IUserSession, UserSession>();
 builder.Services.AddScoped<ILogicValidator, LogicValidator>();
 builder.Services.AddScoped<ICredentialValidator, CredentialValidator>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserLogic, UserLogic>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
